@@ -13,34 +13,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
-
-      - name: Show Xcode version
-        run: xcodebuild -version
-
-      - name: Build archive
+      - name: Select Xcode
         run: |
-          xcodebuild archive \
+          ls /Applications/ | grep Xcode
+          sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          xcodebuild -version
+          xcodebuild -showsdks | grep iphoneos
+
+      - name: Build for device
+        run: |
+          xcodebuild build \
             -project IncomeTracker.xcodeproj \
             -scheme IncomeTracker \
             -configuration Release \
-            -archivePath $RUNNER_TEMP/IncomeTracker.xcarchive \
             -destination "generic/platform=iOS" \
             -sdk iphoneos \
+            -derivedDataPath $RUNNER_TEMP/DerivedData \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGN_ENTITLEMENTS="" \
-            DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER="" | tail -30
+            CODE_SIGN_IDENTITY=- \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            ONLY_ACTIVE_ARCH=NO 2>&1 | tail -40
 
-      - name: Create IPA from archive
+      - name: Create IPA
         run: |
-          echo "=== Archive contents ==="
-          find $RUNNER_TEMP/IncomeTracker.xcarchive -name "*.app" -type d
-          APP_PATH=$(find $RUNNER_TEMP/IncomeTracker.xcarchive -name "*.app" -type d | head -1)
-          echo "Found app at: $APP_PATH"
+          echo "=== Finding .app ==="
+          find $RUNNER_TEMP/DerivedData -name "*.app" -type d
+          APP_PATH=$(find $RUNNER_TEMP/DerivedData/Build/Products -name "*.app" -type d | head -1)
+          echo "App found at: $APP_PATH"
           mkdir -p $RUNNER_TEMP/Payload
           cp -r "$APP_PATH" $RUNNER_TEMP/Payload/
           cd $RUNNER_TEMP
