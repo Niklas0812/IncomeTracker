@@ -37,8 +37,12 @@ jobs:
 
       - name: Create IPA from archive
         run: |
+          echo "=== Archive contents ==="
+          find $RUNNER_TEMP/IncomeTracker.xcarchive -name "*.app" -type d
+          APP_PATH=$(find $RUNNER_TEMP/IncomeTracker.xcarchive -name "*.app" -type d | head -1)
+          echo "Found app at: $APP_PATH"
           mkdir -p $RUNNER_TEMP/Payload
-          cp -r $RUNNER_TEMP/IncomeTracker.xcarchive/Products/Applications/IncomeTracker.app $RUNNER_TEMP/Payload/
+          cp -r "$APP_PATH" $RUNNER_TEMP/Payload/
           cd $RUNNER_TEMP
           zip -r IncomeTracker.ipa Payload
           ls -lh IncomeTracker.ipa
