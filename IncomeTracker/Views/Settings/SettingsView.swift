@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @State private var viewModel = SettingsViewModel()
+    @StateObject private var viewModel = SettingsViewModel()
     @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
 
     var body: some View {
@@ -111,7 +111,6 @@ struct SettingsView: View {
                 .tint(AppTheme.Colors.primaryFallback)
         }
         .listRowBackground(AppTheme.Colors.cardBackground)
-        .sensoryFeedback(.selection, trigger: isOn.wrappedValue)
     }
 
     private func aboutRow(icon: String, title: String, detail: String?, isLink: Bool = false) -> some View {
@@ -127,7 +126,7 @@ struct SettingsView: View {
 
             Spacer()
 
-            if let detail {
+            if let detail = detail {
                 Text(detail)
                     .font(AppTheme.Typography.subheadline)
                     .foregroundStyle(AppTheme.Colors.textTertiary)
@@ -143,6 +142,8 @@ struct SettingsView: View {
     }
 }
 
-#Preview {
-    SettingsView()
+struct SettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        SettingsView()
+    }
 }

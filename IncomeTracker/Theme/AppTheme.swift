@@ -132,33 +132,35 @@ extension View {
 
 // MARK: - Preview
 
-#Preview("Theme Colors") {
-    ScrollView {
-        VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
-            Text("App Theme Preview")
-                .font(AppTheme.Typography.largeTitle)
+struct AppTheme_Previews: PreviewProvider {
+    static var previews: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+                Text("App Theme Preview")
+                    .font(AppTheme.Typography.largeTitle)
 
-            HStack(spacing: AppTheme.Spacing.xs) {
-                colorSwatch("Primary", AppTheme.Colors.primaryFallback)
-                colorSwatch("PaySafe", AppTheme.Colors.paysafe)
-                colorSwatch("PayPal", AppTheme.Colors.paypal)
+                HStack(spacing: AppTheme.Spacing.xs) {
+                    colorSwatch("Primary", AppTheme.Colors.primaryFallback)
+                    colorSwatch("PaySafe", AppTheme.Colors.paysafe)
+                    colorSwatch("PayPal", AppTheme.Colors.paypal)
+                }
+
+                HStack(spacing: AppTheme.Spacing.xs) {
+                    colorSwatch("Positive", AppTheme.Colors.positive)
+                    colorSwatch("Warning", AppTheme.Colors.warning)
+                    colorSwatch("Negative", AppTheme.Colors.negative)
+                }
+
+                Text("€12,345.67")
+                    .font(AppTheme.Typography.heroNumber)
+
+                Text("Sample Card")
+                    .font(AppTheme.Typography.headline)
+                    .frame(maxWidth: .infinity, minHeight: 80)
+                    .cardStyle()
             }
-
-            HStack(spacing: AppTheme.Spacing.xs) {
-                colorSwatch("Positive", AppTheme.Colors.positive)
-                colorSwatch("Warning", AppTheme.Colors.warning)
-                colorSwatch("Negative", AppTheme.Colors.negative)
-            }
-
-            Text("€12,345.67")
-                .font(AppTheme.Typography.heroNumber)
-
-            Text("Sample Card")
-                .font(AppTheme.Typography.headline)
-                .frame(maxWidth: .infinity, minHeight: 80)
-                .cardStyle()
+            .padding(AppTheme.Spacing.md)
         }
-        .padding(AppTheme.Spacing.md)
     }
 }
 

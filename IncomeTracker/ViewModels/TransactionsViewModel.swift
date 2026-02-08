@@ -1,14 +1,12 @@
 import SwiftUI
-import Observation
 
-@Observable
-final class TransactionsViewModel {
+final class TransactionsViewModel: ObservableObject {
 
-    var selectedPeriod: TimePeriod = .monthly
-    var selectedSource: PaymentSource? = nil
-    var selectedStatus: TransactionStatus? = nil
-    var searchText: String = ""
-    var isLoading = false
+    @Published var selectedPeriod: TimePeriod = .monthly
+    @Published var selectedSource: PaymentSource? = nil
+    @Published var selectedStatus: TransactionStatus? = nil
+    @Published var searchText: String = ""
+    @Published var isLoading = false
 
     // All transactions from mock data
     private let allTransactions = SampleData.transactions

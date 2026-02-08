@@ -34,7 +34,7 @@ struct IncomeChartView: View {
                     .cornerRadius(4)
                 }
 
-                if let selectedPoint {
+                if let selectedPoint = selectedPoint {
                     RuleMark(x: .value("Selected", selectedPoint.label))
                         .foregroundStyle(AppTheme.Colors.textTertiary.opacity(0.3))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
@@ -71,13 +71,8 @@ struct IncomeChartView: View {
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
-                                    guard let plotFrame = proxy.plotFrame else { return }
-                                    let origin = geo[plotFrame].origin
-                                    let location = CGPoint(
-                                        x: value.location.x - origin.x,
-                                        y: value.location.y - origin.y
-                                    )
-                                    if let label: String = proxy.value(atX: location.x) {
+                                    let xPosition = value.location.x
+                                    if let label: String = proxy.value(atX: xPosition) {
                                         selectedPoint = dataPoints.first { $0.label == label }
                                     }
                                 }
@@ -123,10 +118,12 @@ struct IncomeChartView: View {
     }
 }
 
-#Preview {
-    IncomeChartView(
-        dataPoints: DashboardViewModel().chartDataPoints,
-        period: .monthly
-    )
-    .padding()
+struct IncomeChartView_Previews: PreviewProvider {
+    static var previews: some View {
+        IncomeChartView(
+            dataPoints: DashboardViewModel().chartDataPoints,
+            period: .monthly
+        )
+        .padding()
+    }
 }

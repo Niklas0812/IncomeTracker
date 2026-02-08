@@ -54,10 +54,12 @@ struct TransactionRow: View {
     }
 }
 
-#Preview {
-    List {
-        TransactionRow(transaction: SampleData.transactions[0])
-        TransactionRow(transaction: SampleData.transactions[1])
-        TransactionRow(transaction: SampleData.transactions[2])
+struct TransactionRow_Previews: PreviewProvider {
+    static var previews: some View {
+        List {
+            TransactionRow(transaction: SampleData.transactions[0])
+            TransactionRow(transaction: SampleData.transactions[1])
+            TransactionRow(transaction: SampleData.transactions[2])
+        }
     }
 }

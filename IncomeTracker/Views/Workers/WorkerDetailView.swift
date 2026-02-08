@@ -82,7 +82,6 @@ struct WorkerDetailView: View {
                 Text(periodEarnings.eurFormatted)
                     .font(AppTheme.Typography.heroNumber)
                     .foregroundStyle(AppTheme.Colors.textPrimary)
-                    .contentTransition(.numericText())
                     .animation(AppTheme.Animation.spring, value: selectedPeriod)
             }
         }
@@ -197,11 +196,13 @@ struct WorkerDetailView: View {
     }
 }
 
-#Preview {
-    NavigationStack {
-        WorkerDetailView(
-            worker: SampleData.workers[0],
-            viewModel: WorkersViewModel()
-        )
+struct WorkerDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            WorkerDetailView(
+                worker: SampleData.workers[0],
+                viewModel: WorkersViewModel()
+            )
+        }
     }
 }

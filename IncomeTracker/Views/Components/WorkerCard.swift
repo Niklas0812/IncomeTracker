@@ -32,13 +32,15 @@ struct WorkerCard: View {
     }
 }
 
-#Preview {
-    ScrollView(.horizontal) {
-        HStack(spacing: 12) {
-            ForEach(SampleData.workers.prefix(4)) { worker in
-                WorkerCard(worker: worker)
+struct WorkerCard_Previews: PreviewProvider {
+    static var previews: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 12) {
+                ForEach(SampleData.workers.prefix(4)) { worker in
+                    WorkerCard(worker: worker)
+                }
             }
+            .padding()
         }
-        .padding()
     }
 }

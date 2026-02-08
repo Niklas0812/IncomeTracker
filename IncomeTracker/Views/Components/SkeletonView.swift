@@ -84,12 +84,14 @@ struct SkeletonCard: View {
     }
 }
 
-#Preview("Skeleton States") {
-    VStack(spacing: 20) {
-        SkeletonCard()
-        SkeletonTransactionRow()
-        SkeletonTransactionRow()
-        SkeletonTransactionRow()
+struct SkeletonView_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack(spacing: 20) {
+            SkeletonCard()
+            SkeletonTransactionRow()
+            SkeletonTransactionRow()
+            SkeletonTransactionRow()
+        }
+        .padding()
     }
-    .padding()
 }

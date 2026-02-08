@@ -10,15 +10,15 @@ enum PaymentSource: String, CaseIterable, Codable, Identifiable {
 
     var color: Color {
         switch self {
-        case .paysafe: AppTheme.Colors.paysafe
-        case .paypal: AppTheme.Colors.paypal
+        case .paysafe: return AppTheme.Colors.paysafe
+        case .paypal: return AppTheme.Colors.paypal
         }
     }
 
     var iconName: String {
         switch self {
-        case .paysafe: "creditcard.fill"
-        case .paypal: "paperplane.fill"
+        case .paysafe: return "creditcard.fill"
+        case .paypal: return "paperplane.fill"
         }
     }
 }
@@ -34,17 +34,17 @@ enum TransactionStatus: String, CaseIterable, Codable, Identifiable {
 
     var color: Color {
         switch self {
-        case .completed: AppTheme.Colors.positive
-        case .pending: AppTheme.Colors.warning
-        case .failed: AppTheme.Colors.negative
+        case .completed: return AppTheme.Colors.positive
+        case .pending: return AppTheme.Colors.warning
+        case .failed: return AppTheme.Colors.negative
         }
     }
 
     var iconName: String {
         switch self {
-        case .completed: "checkmark.circle.fill"
-        case .pending: "clock.fill"
-        case .failed: "xmark.circle.fill"
+        case .completed: return "checkmark.circle.fill"
+        case .pending: return "clock.fill"
+        case .failed: return "xmark.circle.fill"
         }
     }
 }
@@ -63,24 +63,24 @@ enum TimePeriod: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .daily: "Today"
-        case .weekly: "This Week"
-        case .monthly: "This Month"
-        case .threeMonths: "3 Months"
-        case .sixMonths: "6 Months"
-        case .oneYear: "1 Year"
+        case .daily: return "Today"
+        case .weekly: return "This Week"
+        case .monthly: return "This Month"
+        case .threeMonths: return "3 Months"
+        case .sixMonths: return "6 Months"
+        case .oneYear: return "1 Year"
         }
     }
 
     /// Calendar component and value for date range calculation
     var dateRange: (component: Calendar.Component, value: Int) {
         switch self {
-        case .daily: (.day, 1)
-        case .weekly: (.weekOfYear, 1)
-        case .monthly: (.month, 1)
-        case .threeMonths: (.month, 3)
-        case .sixMonths: (.month, 6)
-        case .oneYear: (.year, 1)
+        case .daily: return (.day, 1)
+        case .weekly: return (.weekOfYear, 1)
+        case .monthly: return (.month, 1)
+        case .threeMonths: return (.month, 3)
+        case .sixMonths: return (.month, 6)
+        case .oneYear: return (.year, 1)
         }
     }
 

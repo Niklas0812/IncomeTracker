@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WorkersListView: View {
-    @State private var viewModel = WorkersViewModel()
+    @StateObject private var viewModel = WorkersViewModel()
     @State private var showAddSheet = false
 
     var body: some View {
@@ -130,7 +130,6 @@ struct WorkersListView: View {
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.selection, trigger: isSelected)
     }
 
     // MARK: - Worker Row
@@ -175,6 +174,8 @@ struct WorkersListView: View {
     }
 }
 
-#Preview {
-    WorkersListView()
+struct WorkersListView_Previews: PreviewProvider {
+    static var previews: some View {
+        WorkersListView()
+    }
 }

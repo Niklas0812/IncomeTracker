@@ -45,20 +45,22 @@ struct SourceBadge: View {
     }
 }
 
-#Preview {
-    VStack(spacing: 16) {
-        HStack(spacing: 12) {
-            SourceBadge(source: .paysafe, style: .pill)
-            SourceBadge(source: .paypal, style: .pill)
+struct SourceBadge_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                SourceBadge(source: .paysafe, style: .pill)
+                SourceBadge(source: .paypal, style: .pill)
+            }
+            HStack(spacing: 12) {
+                SourceBadge(source: .paysafe, style: .compact)
+                SourceBadge(source: .paypal, style: .compact)
+            }
+            HStack(spacing: 12) {
+                SourceBadge(source: .paysafe, style: .dot)
+                SourceBadge(source: .paypal, style: .dot)
+            }
         }
-        HStack(spacing: 12) {
-            SourceBadge(source: .paysafe, style: .compact)
-            SourceBadge(source: .paypal, style: .compact)
-        }
-        HStack(spacing: 12) {
-            SourceBadge(source: .paysafe, style: .dot)
-            SourceBadge(source: .paypal, style: .dot)
-        }
+        .padding()
     }
-    .padding()
 }

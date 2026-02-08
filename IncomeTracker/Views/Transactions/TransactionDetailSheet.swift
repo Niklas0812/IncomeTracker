@@ -132,6 +132,8 @@ struct TransactionDetailSheet: View {
     }
 }
 
-#Preview {
-    TransactionDetailSheet(transaction: SampleData.transactions[0])
+struct TransactionDetailSheet_Previews: PreviewProvider {
+    static var previews: some View {
+        TransactionDetailSheet(transaction: SampleData.transactions[0])
+    }
 }

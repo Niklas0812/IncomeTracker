@@ -16,11 +16,13 @@ struct AvatarView: View {
     }
 }
 
-#Preview {
-    HStack(spacing: 12) {
-        AvatarView(initials: "EM", color: .blue)
-        AvatarView(initials: "MR", color: .purple, size: 56)
-        AvatarView(initials: "SL", color: .orange, size: 32)
+struct AvatarView_Previews: PreviewProvider {
+    static var previews: some View {
+        HStack(spacing: 12) {
+            AvatarView(initials: "EM", color: .blue)
+            AvatarView(initials: "MR", color: .purple, size: 56)
+            AvatarView(initials: "SL", color: .orange, size: 32)
+        }
+        .padding()
     }
-    .padding()
 }

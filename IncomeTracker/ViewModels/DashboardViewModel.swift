@@ -1,11 +1,9 @@
 import SwiftUI
-import Observation
 
-@Observable
-final class DashboardViewModel {
+final class DashboardViewModel: ObservableObject {
 
-    var selectedPeriod: TimePeriod = .monthly
-    var isLoading = false
+    @Published var selectedPeriod: TimePeriod = .monthly
+    @Published var isLoading = false
 
     // Filtered data
     var totalIncome: Decimal { filteredTransactions.reduce(0) { $0 + $1.amount } }

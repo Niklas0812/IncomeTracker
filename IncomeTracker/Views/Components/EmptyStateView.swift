@@ -26,7 +26,7 @@ struct EmptyStateView: View {
                     .frame(maxWidth: 280)
             }
 
-            if let actionTitle, let action {
+            if let actionTitle = actionTitle, let action = action {
                 Button(action: action) {
                     Text(actionTitle)
                         .font(AppTheme.Typography.callout)
@@ -43,13 +43,15 @@ struct EmptyStateView: View {
     }
 }
 
-#Preview {
-    EmptyStateView(
-        iconName: "tray",
-        title: "No Transactions",
-        message: "There are no transactions matching your current filters. Try adjusting your search.",
-        actionTitle: "Clear Filters"
-    ) {
-        print("Clear")
+struct EmptyStateView_Previews: PreviewProvider {
+    static var previews: some View {
+        EmptyStateView(
+            iconName: "tray",
+            title: "No Transactions",
+            message: "There are no transactions matching your current filters. Try adjusting your search.",
+            actionTitle: "Clear Filters"
+        ) {
+            print("Clear")
+        }
     }
 }

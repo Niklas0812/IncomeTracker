@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @State private var viewModel = DashboardViewModel()
+    @StateObject private var viewModel = DashboardViewModel()
     @State private var animatedTotal: Decimal = 0
     @State private var hasAppeared = false
 
@@ -28,7 +28,7 @@ struct DashboardView: View {
                     animateCountUp()
                 }
             }
-            .onChange(of: viewModel.selectedPeriod) {
+            .onChange(of: viewModel.selectedPeriod) { _ in
                 animateCountUp()
             }
         }
@@ -68,7 +68,6 @@ struct DashboardView: View {
             Text(animatedTotal.eurFormatted)
                 .font(AppTheme.Typography.heroNumber)
                 .foregroundStyle(AppTheme.Colors.textPrimary)
-                .contentTransition(.numericText())
                 .animation(AppTheme.Animation.spring, value: animatedTotal)
         }
         .frame(maxWidth: .infinity)
@@ -177,6 +176,8 @@ struct DashboardView: View {
     }
 }
 
-#Preview {
-    DashboardView()
+struct DashboardView_Previews: PreviewProvider {
+    static var previews: some View {
+        DashboardView()
+    }
 }

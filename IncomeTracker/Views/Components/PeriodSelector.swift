@@ -25,7 +25,6 @@ struct PeriodSelector: View {
                         }
                 }
                 .buttonStyle(.plain)
-                .sensoryFeedback(.selection, trigger: selected)
                 .accessibilityLabel(period.displayName)
                 .accessibilityAddTraits(selected == period ? .isSelected : [])
             }
@@ -38,7 +37,7 @@ struct PeriodSelector: View {
     @Namespace private var namespace
 }
 
-#Preview {
+struct PeriodSelector_Previews: PreviewProvider {
     struct Preview: View {
         @State private var period: TimePeriod = .monthly
         var body: some View {
@@ -46,5 +45,7 @@ struct PeriodSelector: View {
                 .padding()
         }
     }
-    return Preview()
+    static var previews: some View {
+        Preview()
+    }
 }

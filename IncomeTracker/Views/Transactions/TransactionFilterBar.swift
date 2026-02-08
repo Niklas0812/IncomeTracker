@@ -87,12 +87,11 @@ struct FilterChip: View {
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.selection, trigger: isSelected)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
-#Preview {
+struct TransactionFilterBar_Previews: PreviewProvider {
     struct Preview: View {
         @State private var source: PaymentSource?
         @State private var status: TransactionStatus?
@@ -106,5 +105,7 @@ struct FilterChip: View {
             .padding()
         }
     }
-    return Preview()
+    static var previews: some View {
+        Preview()
+    }
 }

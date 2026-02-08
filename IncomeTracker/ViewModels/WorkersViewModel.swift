@@ -1,12 +1,10 @@
 import SwiftUI
-import Observation
 
-@Observable
-final class WorkersViewModel {
+final class WorkersViewModel: ObservableObject {
 
-    var selectedSource: PaymentSource? = nil
-    var sortOption: WorkerSortOption = .earnings
-    var searchText: String = ""
+    @Published var selectedSource: PaymentSource? = nil
+    @Published var sortOption: WorkerSortOption = .earnings
+    @Published var searchText: String = ""
 
     private let allWorkers = SampleData.workers
     let allTransactions = SampleData.transactions

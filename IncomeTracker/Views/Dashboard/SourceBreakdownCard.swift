@@ -13,7 +13,7 @@ struct SourceBreakdownCard: View {
             HStack {
                 SourceBadge(source: source, style: .compact)
                 Spacer()
-                if let percentChange {
+                if let percentChange = percentChange {
                     PercentChangeLabel(value: percentChange)
                 }
             }
@@ -22,7 +22,6 @@ struct SourceBreakdownCard: View {
             Text(amount.eurFormatted)
                 .font(AppTheme.Typography.title2)
                 .foregroundStyle(AppTheme.Colors.textPrimary)
-                .contentTransition(.numericText())
 
             // Mini sparkline
             sparklineChart
@@ -86,21 +85,23 @@ struct PercentChangeLabel: View {
     }
 }
 
-#Preview {
-    let vm = DashboardViewModel()
-    HStack(spacing: 12) {
-        SourceBreakdownCard(
-            source: .paysafe,
-            amount: vm.paysafeIncome,
-            percentChange: 12.5,
-            transactions: vm.filteredTransactions
-        )
-        SourceBreakdownCard(
-            source: .paypal,
-            amount: vm.paypalIncome,
-            percentChange: -3.2,
-            transactions: vm.filteredTransactions
-        )
+struct SourceBreakdownCard_Previews: PreviewProvider {
+    static var previews: some View {
+        let vm = DashboardViewModel()
+        HStack(spacing: 12) {
+            SourceBreakdownCard(
+                source: .paysafe,
+                amount: vm.paysafeIncome,
+                percentChange: 12.5,
+                transactions: vm.filteredTransactions
+            )
+            SourceBreakdownCard(
+                source: .paypal,
+                amount: vm.paypalIncome,
+                percentChange: -3.2,
+                transactions: vm.filteredTransactions
+            )
+        }
+        .padding()
     }
-    .padding()
 }

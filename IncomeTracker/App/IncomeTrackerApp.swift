@@ -46,10 +46,11 @@ struct ContentView: View {
                 .tag(3)
         }
         .tint(AppTheme.Colors.primaryFallback)
-        .sensoryFeedback(.selection, trigger: selectedTab)
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }

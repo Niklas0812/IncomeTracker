@@ -20,7 +20,7 @@ struct AddWorkerSheet: View {
                             .font(AppTheme.Typography.body)
                             .textContentType(.name)
                             .autocorrectionDisabled()
-                            .onChange(of: name) { showValidation = false }
+                            .onChange(of: name) { _ in showValidation = false }
 
                         if showValidation && !isValid {
                             Text("Name is required")
@@ -116,6 +116,8 @@ struct AddWorkerSheet: View {
     }
 }
 
-#Preview {
-    AddWorkerSheet()
+struct AddWorkerSheet_Previews: PreviewProvider {
+    static var previews: some View {
+        AddWorkerSheet()
+    }
 }

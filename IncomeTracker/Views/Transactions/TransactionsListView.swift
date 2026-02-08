@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TransactionsListView: View {
-    @State private var viewModel = TransactionsViewModel()
+    @StateObject private var viewModel = TransactionsViewModel()
     @State private var selectedTransaction: Transaction?
 
     var body: some View {
@@ -99,6 +99,8 @@ struct TransactionsListView: View {
     }
 }
 
-#Preview {
-    TransactionsListView()
+struct TransactionsListView_Previews: PreviewProvider {
+    static var previews: some View {
+        TransactionsListView()
+    }
 }

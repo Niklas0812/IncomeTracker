@@ -10,7 +10,7 @@ struct StatCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
             HStack {
-                if let iconName {
+                if let iconName = iconName {
                     Image(systemName: iconName)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(iconColor)
@@ -26,7 +26,7 @@ struct StatCard: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
-            if let subtitle {
+            if let subtitle = subtitle {
                 Text(subtitle)
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(AppTheme.Colors.textTertiary)
@@ -39,10 +39,12 @@ struct StatCard: View {
     }
 }
 
-#Preview {
-    HStack {
-        StatCard(title: "Average", value: "€245.30", subtitle: "Per transaction", iconName: "chart.bar.fill")
-        StatCard(title: "Highest", value: "€2,100.00", iconName: "arrow.up.circle.fill", iconColor: .green)
+struct StatCard_Previews: PreviewProvider {
+    static var previews: some View {
+        HStack {
+            StatCard(title: "Average", value: "€245.30", subtitle: "Per transaction", iconName: "chart.bar.fill")
+            StatCard(title: "Highest", value: "€2,100.00", iconName: "arrow.up.circle.fill", iconColor: .green)
+        }
+        .padding()
     }
-    .padding()
 }
