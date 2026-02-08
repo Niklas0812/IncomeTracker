@@ -15,10 +15,8 @@ jobs:
 
       - name: Select Xcode
         run: |
-          ls /Applications/ | grep Xcode
           sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           xcodebuild -version
-          xcodebuild -showsdks | grep iphoneos
 
       - name: Build for device
         run: |
@@ -26,25 +24,28 @@ jobs:
             -project IncomeTracker.xcodeproj \
             -scheme IncomeTracker \
             -configuration Release \
-            -destination "generic/platform=iOS" \
             -sdk iphoneos \
             -derivedDataPath $RUNNER_TEMP/DerivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
+            -destination "generic/platform=iOS" \
             CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            ONLY_ACTIVE_ARCH=NO 2>&1 | tail -40
+            ONLY_ACTIVE_ARCH=NO \
+            ENABLE_BITCODE=NO \
+            STRIP_INSTALLED_PRODUCT=NO \
+            COPY_PHASE_STRIP=NO
 
       - name: Create IPA
         run: |
-          echo "=== Finding .app ==="
-          find $RUNNER_TEMP/DerivedData -name "*.app" -type d
-          APP_PATH=$(find $RUNNER_TEMP/DerivedData/Build/Products -name "*.app" -type d | head -1)
-          echo "App found at: $APP_PATH"
+          APP_PATH=$(find $RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos -name "*.app" -type d | head -1)
+          echo "App at: $APP_PATH"
+          echo "App contents:"
+          ls -la "$APP_PATH"
           mkdir -p $RUNNER_TEMP/Payload
-          cp -r "$APP_PATH" $RUNNER_TEMP/Payload/
+          cp -R "$APP_PATH" $RUNNER_TEMP/Payload/
           cd $RUNNER_TEMP
-          zip -r IncomeTracker.ipa Payload
+          zip -r -y IncomeTracker.ipa Payload
           ls -lh IncomeTracker.ipa
 
       - name: Upload IPA artifact
