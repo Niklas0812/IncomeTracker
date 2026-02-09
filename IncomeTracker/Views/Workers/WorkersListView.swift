@@ -82,21 +82,30 @@ struct WorkersListView: View {
             .background(AppTheme.Colors.backgroundPrimary)
             .navigationTitle("Workers")
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Picker("Sort by", selection: $viewModel.sortOption) {
+                        Button {
+                            showAddSheet = true
+                        } label: {
+                            Label("Add Worker", systemImage: "plus")
+                        }
+                        Divider()
+                        Menu("Sort by") {
                             ForEach(WorkerSortOption.allCases) { option in
-                                Text(option.rawValue).tag(option)
+                                Button {
+                                    viewModel.sortOption = option
+                                } label: {
+                                    HStack {
+                                        Text(option.rawValue)
+                                        if viewModel.sortOption == option {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
                             }
                         }
                     } label: {
-                        Image(systemName: "arrow.up.arrow.down.circle")
-                            .foregroundStyle(AppTheme.Colors.primaryFallback)
-                    }
-                    Button {
-                        showAddSheet = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
+                        Image(systemName: "ellipsis.circle")
                             .foregroundStyle(AppTheme.Colors.primaryFallback)
                     }
                 }

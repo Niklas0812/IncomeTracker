@@ -20,14 +20,14 @@ struct IncomeChartView: View {
             Chart {
                 ForEach(dataPoints) { point in
                     BarMark(
-                        x: .value("Date", point.label),
+                        x: .value("Date", point.date, unit: chartUnit),
                         y: .value("Amount", point.paysafeAmount.doubleValue)
                     )
                     .foregroundStyle(AppTheme.Colors.paysafe.gradient)
                     .cornerRadius(4)
 
                     BarMark(
-                        x: .value("Date", point.label),
+                        x: .value("Date", point.date, unit: chartUnit),
                         y: .value("Amount", point.paypalAmount.doubleValue)
                     )
                     .foregroundStyle(AppTheme.Colors.paypal.gradient)
@@ -35,7 +35,7 @@ struct IncomeChartView: View {
                 }
 
                 if let selectedPoint = selectedPoint {
-                    RuleMark(x: .value("Selected", selectedPoint.label))
+                    RuleMark(x: .value("Selected", selectedPoint.date, unit: chartUnit))
                         .foregroundStyle(AppTheme.Colors.textTertiary.opacity(0.3))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                         .annotation(position: .top, spacing: 4) {
@@ -45,7 +45,7 @@ struct IncomeChartView: View {
             }
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) { _ in
-                    AxisValueLabel()
+                    AxisValueLabel(format: xAxisDateFormat)
                         .font(AppTheme.Typography.micro)
                         .foregroundStyle(AppTheme.Colors.textTertiary)
                 }
@@ -72,8 +72,11 @@ struct IncomeChartView: View {
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
                                     let xPosition = value.location.x
-                                    if let label: String = proxy.value(atX: xPosition) {
-                                        selectedPoint = dataPoints.first { $0.label == label }
+                                    if let date: Date = proxy.value(atX: xPosition) {
+                                        // Find closest data point by date
+                                        selectedPoint = dataPoints.min(by: {
+                                            abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
+                                        })
                                     }
                                 }
                                 .onEnded { _ in
@@ -88,6 +91,32 @@ struct IncomeChartView: View {
         }
         .padding(AppTheme.Spacing.md)
         .cardStyle()
+    }
+
+    private var chartUnit: Calendar.Component {
+        switch period {
+        case .daily: return .hour
+        case .weekly: return .day
+        case .monthly: return .day
+        case .threeMonths: return .weekOfYear
+        case .sixMonths: return .weekOfYear
+        case .oneYear: return .month
+        }
+    }
+
+    private var xAxisDateFormat: Date.FormatStyle {
+        switch period {
+        case .daily:
+            return .dateTime.hour()
+        case .weekly:
+            return .dateTime.weekday(.abbreviated)
+        case .monthly:
+            return .dateTime.day().month(.abbreviated)
+        case .threeMonths, .sixMonths:
+            return .dateTime.day().month(.abbreviated)
+        case .oneYear:
+            return .dateTime.month(.abbreviated)
+        }
     }
 
     private func legendItem(color: Color, label: String) -> some View {
