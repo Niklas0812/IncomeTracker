@@ -2,16 +2,39 @@ import SwiftUI
 
 final class SettingsViewModel: ObservableObject {
 
-    // Persisted via @AppStorage in the view layer
     @Published var appearanceMode: AppearanceMode = .system
-    @Published var selectedCurrency: String = "EUR"
     @Published var transactionAlerts: Bool = true
     @Published var weeklySummary: Bool = true
     @Published var monthlyReport: Bool = false
 
-    let currencies = ["EUR", "USD", "GBP", "CHF"]
-    let appVersion = "1.0.0"
-    let buildNumber = "42"
+    @Published var serverURL: String {
+        didSet { APIClient.shared.baseURL = serverURL }
+    }
+    @Published var apiToken: String {
+        didSet { APIClient.shared.apiToken = apiToken }
+    }
+    @Published var isServerReachable: Bool = false
+    @Published var isCheckingServer: Bool = false
+
+    let appVersion: String
+
+    init() {
+        self.serverURL = APIClient.shared.baseURL
+        self.apiToken = APIClient.shared.apiToken
+        self.appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        checkServerHealth()
+    }
+
+    func checkServerHealth() {
+        isCheckingServer = true
+        Task {
+            let reachable = await APIClient.shared.checkHealth()
+            await MainActor.run {
+                self.isServerReachable = reachable
+                self.isCheckingServer = false
+            }
+        }
+    }
 }
 
 enum AppearanceMode: String, CaseIterable, Identifiable {

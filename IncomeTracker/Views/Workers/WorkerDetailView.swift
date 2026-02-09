@@ -6,6 +6,8 @@ struct WorkerDetailView: View {
     let viewModel: WorkersViewModel
 
     @State private var selectedPeriod: TimePeriod = .monthly
+    @State private var showEditSheet = false
+    @State private var paymentBreakdown: PaymentBreakdownResponse?
 
     private var periodEarnings: Decimal { viewModel.earnings(for: worker, in: selectedPeriod) }
     private var chartData: [WorkerChartPoint] { viewModel.chartData(for: worker, in: selectedPeriod) }
@@ -18,6 +20,7 @@ struct WorkerDetailView: View {
                 headerCard
                 earningsSummary
                 earningsChart
+                paymentBreakdownSection
                 statsGrid
                 transactionHistory
             }
@@ -27,6 +30,29 @@ struct WorkerDetailView: View {
         .background(AppTheme.Colors.backgroundPrimary)
         .navigationTitle(worker.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showEditSheet = true
+                } label: {
+                    Text("Edit")
+                        .font(AppTheme.Typography.callout)
+                        .foregroundStyle(AppTheme.Colors.primaryFallback)
+                }
+            }
+        }
+        .sheet(isPresented: $showEditSheet) {
+            EditWorkerSheet(worker: worker, viewModel: viewModel)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
+        .onAppear {
+            viewModel.fetchWorkerDetail(worker) { _ in }
+            fetchPaymentBreakdown()
+        }
+        .onChange(of: selectedPeriod) { _ in
+            fetchPaymentBreakdown()
+        }
     }
 
     // MARK: - Header Card
@@ -41,8 +67,16 @@ struct WorkerDetailView: View {
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
                 HStack(spacing: AppTheme.Spacing.xs) {
-                    SourceBadge(source: worker.paymentSource, style: .pill)
                     statusPill
+                    if let rate = worker.hourlyRate {
+                        Text("$\(String(format: "%.2f", rate))/hr")
+                            .font(AppTheme.Typography.micro)
+                            .foregroundStyle(AppTheme.Colors.textTertiary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(AppTheme.Colors.textTertiary.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
                 }
             }
 
@@ -95,11 +129,11 @@ struct WorkerDetailView: View {
                 x: .value("Date", point.date, unit: .day),
                 y: .value("Amount", point.amount.doubleValue)
             )
-            .foregroundStyle(worker.paymentSource.color.gradient)
+            .foregroundStyle(AppTheme.Colors.primaryFallback.gradient)
             .cornerRadius(4)
         }
         .chartXAxis {
-            AxisMarks(values: .automatic) { _ in
+            AxisMarks(values: .automatic(desiredCount: 6)) { _ in
                 AxisValueLabel(format: .dateTime.day().month(.abbreviated))
                     .font(AppTheme.Typography.micro)
             }
@@ -120,6 +154,46 @@ struct WorkerDetailView: View {
         .padding(AppTheme.Spacing.md)
         .cardStyle()
         .animation(AppTheme.Animation.spring, value: selectedPeriod)
+    }
+
+    // MARK: - Payment Breakdown
+
+    private var paymentBreakdownSection: some View {
+        Group {
+            if let breakdown = paymentBreakdown {
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                    Text("Payment Breakdown")
+                        .font(AppTheme.Typography.title3)
+                        .foregroundStyle(AppTheme.Colors.textPrimary)
+
+                    VStack(spacing: 0) {
+                        breakdownRow(label: "Shift Pay", value: String(format: "$%.2f", breakdown.shiftPay))
+                        Divider().padding(.leading, AppTheme.Spacing.md)
+                        breakdownRow(label: "Bonus", value: String(format: "$%.2f", breakdown.bonus))
+                        Divider().padding(.leading, AppTheme.Spacing.md)
+                        breakdownRow(label: "Total Payment", value: String(format: "$%.2f", breakdown.totalPayment), bold: true)
+                        Divider().padding(.leading, AppTheme.Spacing.md)
+                        breakdownRow(label: "EUR Earned", value: String(format: "\u{20AC}%.2f", breakdown.totalEurEarned))
+                        Divider().padding(.leading, AppTheme.Spacing.md)
+                        breakdownRow(label: "Transactions", value: "\(breakdown.transactionCount)")
+                    }
+                    .cardStyle()
+                }
+            }
+        }
+    }
+
+    private func breakdownRow(label: String, value: String, bold: Bool = false) -> some View {
+        HStack {
+            Text(label)
+                .font(bold ? AppTheme.Typography.headline : AppTheme.Typography.subheadline)
+                .foregroundStyle(AppTheme.Colors.textSecondary)
+            Spacer()
+            Text(value)
+                .font(bold ? AppTheme.Typography.headline : AppTheme.Typography.callout)
+                .foregroundStyle(bold ? AppTheme.Colors.positive : AppTheme.Colors.textPrimary)
+        }
+        .padding(AppTheme.Spacing.md)
     }
 
     // MARK: - Stats Grid
@@ -194,13 +268,30 @@ struct WorkerDetailView: View {
             .cardStyle()
         }
     }
+
+    // MARK: - Helpers
+
+    private func fetchPaymentBreakdown() {
+        Task {
+            do {
+                let response: PaymentBreakdownResponse = try await APIClient.shared.request(
+                    .workerPayment(userId: worker.id, period: selectedPeriod.rawValue)
+                )
+                await MainActor.run {
+                    self.paymentBreakdown = response
+                }
+            } catch {
+                // silently fail
+            }
+        }
+    }
 }
 
 struct WorkerDetailView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             WorkerDetailView(
-                worker: SampleData.workers[0],
+                worker: Worker(id: 123, name: "Test Worker", totalEarnings: 1000),
                 viewModel: WorkersViewModel()
             )
         }

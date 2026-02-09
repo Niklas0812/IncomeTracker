@@ -2,27 +2,47 @@ import SwiftUI
 
 struct AddWorkerSheet: View {
     @Environment(\.dismiss) private var dismiss
+    let viewModel: WorkersViewModel
 
+    @State private var userId = ""
     @State private var name = ""
-    @State private var selectedSource: PaymentSource = .paysafe
+    @State private var hourlyRate = ""
+    @State private var dailyHours = "12"
     @State private var isLoading = false
     @State private var showValidation = false
+    @State private var errorMessage: String?
 
-    private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var isValid: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty &&
+        Int(userId) != nil
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    // Name field
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
-                        TextField("Full Name", text: $name)
+                        TextField("Telegram User ID", text: $userId)
+                            .font(AppTheme.Typography.body)
+                            .keyboardType(.numberPad)
+                            .onChange(of: userId) { _ in showValidation = false }
+
+                        if showValidation && Int(userId) == nil {
+                            Text("Valid numeric User ID is required")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(AppTheme.Colors.negative)
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
+                        TextField("Username", text: $name)
                             .font(AppTheme.Typography.body)
                             .textContentType(.name)
                             .autocorrectionDisabled()
                             .onChange(of: name) { _ in showValidation = false }
 
-                        if showValidation && !isValid {
+                        if showValidation && name.trimmingCharacters(in: .whitespaces).isEmpty {
                             Text("Name is required")
                                 .font(AppTheme.Typography.caption)
                                 .foregroundStyle(AppTheme.Colors.negative)
@@ -34,19 +54,29 @@ struct AddWorkerSheet: View {
                 }
 
                 Section {
-                    Picker("Payment Source", selection: $selectedSource) {
-                        ForEach(PaymentSource.allCases) { source in
-                            HStack {
-                                Image(systemName: source.iconName)
-                                    .foregroundStyle(source.color)
-                                Text(source.rawValue)
-                            }
-                            .tag(source)
-                        }
+                    HStack {
+                        Text("Hourly Rate ($)")
+                            .font(AppTheme.Typography.body)
+                        Spacer()
+                        TextField("1.66", text: $hourlyRate)
+                            .font(AppTheme.Typography.body)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 100)
                     }
-                    .pickerStyle(.inline)
+
+                    HStack {
+                        Text("Daily Hours")
+                            .font(AppTheme.Typography.body)
+                        Spacer()
+                        TextField("12", text: $dailyHours)
+                            .font(AppTheme.Typography.body)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 100)
+                    }
                 } header: {
-                    Text("Payment Source")
+                    Text("Pay Configuration")
                 }
 
                 // Preview
@@ -61,12 +91,22 @@ struct AddWorkerSheet: View {
                             VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
                                 Text(name.trimmingCharacters(in: .whitespaces))
                                     .font(AppTheme.Typography.headline)
-                                SourceBadge(source: selectedSource, style: .pill)
+                                Text("ID: \(userId)")
+                                    .font(AppTheme.Typography.caption)
+                                    .foregroundStyle(AppTheme.Colors.textTertiary)
                             }
                         }
                         .padding(.vertical, AppTheme.Spacing.xxs)
                     } header: {
                         Text("Preview")
+                    }
+                }
+
+                if let error = errorMessage {
+                    Section {
+                        Text(error)
+                            .font(AppTheme.Typography.caption)
+                            .foregroundStyle(AppTheme.Colors.negative)
                     }
                 }
             }
@@ -108,16 +148,26 @@ struct AddWorkerSheet: View {
         guard isValid else { return }
 
         isLoading = true
-        // Simulate network delay then dismiss (UI-only demo)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+        errorMessage = nil
+
+        viewModel.createWorker(
+            userId: Int(userId)!,
+            username: name.trimmingCharacters(in: .whitespaces),
+            hourlyRate: Double(hourlyRate) ?? 1.0,
+            dailyHours: Double(dailyHours) ?? 12.0
+        ) { success in
             isLoading = false
-            dismiss()
+            if success {
+                dismiss()
+            } else {
+                errorMessage = "Failed to create worker. Check server connection."
+            }
         }
     }
 }
 
 struct AddWorkerSheet_Previews: PreviewProvider {
     static var previews: some View {
-        AddWorkerSheet()
+        AddWorkerSheet(viewModel: WorkersViewModel())
     }
 }

@@ -87,19 +87,18 @@ struct PercentChangeLabel: View {
 
 struct SourceBreakdownCard_Previews: PreviewProvider {
     static var previews: some View {
-        let vm = DashboardViewModel()
         HStack(spacing: 12) {
             SourceBreakdownCard(
                 source: .paysafe,
-                amount: vm.paysafeIncome,
+                amount: 5000,
                 percentChange: 12.5,
-                transactions: vm.filteredTransactions
+                transactions: []
             )
             SourceBreakdownCard(
                 source: .paypal,
-                amount: vm.paypalIncome,
+                amount: 3000,
                 percentChange: -3.2,
-                transactions: vm.filteredTransactions
+                transactions: []
             )
         }
         .padding()

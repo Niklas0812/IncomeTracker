@@ -11,24 +11,35 @@ struct DashboardView: View {
                 VStack(spacing: AppTheme.Spacing.lg) {
                     headerSection
                     periodSelector
-                    heroIncome
-                    incomeChart
-                    sourceBreakdown
-                    recentTransactionsSection
-                    topWorkersSection
+
+                    if viewModel.isLoading && viewModel.totalIncome == 0 {
+                        loadingPlaceholder
+                    } else {
+                        heroIncome
+                        incomeChart
+                        sourceBreakdown
+                        recentTransactionsSection
+                        topWorkersSection
+                    }
                 }
                 .padding(.horizontal, AppTheme.Spacing.md)
                 .padding(.bottom, AppTheme.Spacing.xxl)
             }
+            .refreshable { viewModel.fetchData() }
             .background(AppTheme.Colors.backgroundPrimary)
             .navigationBarTitleDisplayMode(.inline)
+            .overlay(alignment: .top) {
+                if let error = viewModel.error {
+                    errorBanner(error)
+                }
+            }
             .onAppear {
                 if !hasAppeared {
                     hasAppeared = true
                     animateCountUp()
                 }
             }
-            .onChange(of: viewModel.selectedPeriod) { _ in
+            .onChange(of: viewModel.totalIncome) { _ in
                 animateCountUp()
             }
         }
@@ -91,13 +102,13 @@ struct DashboardView: View {
                 source: .paysafe,
                 amount: viewModel.paysafeIncome,
                 percentChange: viewModel.paysafePercentChange,
-                transactions: viewModel.filteredTransactions
+                transactions: viewModel.recentTransactions
             )
             SourceBreakdownCard(
                 source: .paypal,
                 amount: viewModel.paypalIncome,
                 percentChange: viewModel.paypalPercentChange,
-                transactions: viewModel.filteredTransactions
+                transactions: viewModel.recentTransactions
             )
         }
     }
@@ -164,6 +175,38 @@ struct DashboardView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Loading / Error
+
+    private var loadingPlaceholder: some View {
+        VStack(spacing: AppTheme.Spacing.md) {
+            ForEach(0..<3, id: \.self) { _ in
+                SkeletonView()
+                    .frame(height: 80)
+                    .cardStyle()
+            }
+        }
+    }
+
+    private func errorBanner(_ message: String) -> some View {
+        HStack(spacing: AppTheme.Spacing.xs) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(AppTheme.Colors.warning)
+            Text(message)
+                .font(AppTheme.Typography.caption)
+                .foregroundStyle(AppTheme.Colors.textPrimary)
+            Spacer()
+            Button("Retry") { viewModel.fetchData() }
+                .font(AppTheme.Typography.captionBold)
+                .foregroundStyle(AppTheme.Colors.primaryFallback)
+        }
+        .padding(AppTheme.Spacing.sm)
+        .background(AppTheme.Colors.warning.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.small))
+        .padding(.horizontal, AppTheme.Spacing.md)
+        .padding(.top, AppTheme.Spacing.xs)
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     // MARK: - Animation

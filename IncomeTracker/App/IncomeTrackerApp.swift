@@ -3,11 +3,26 @@ import SwiftUI
 @main
 struct IncomeTrackerApp: App {
     @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
+    @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        NotificationService.shared.requestPermission()
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(currentColorScheme)
+                .onChange(of: scenePhase) { phase in
+                    switch phase {
+                    case .active:
+                        PollingService.shared.start()
+                    case .inactive, .background:
+                        PollingService.shared.stop()
+                    @unknown default:
+                        break
+                    }
+                }
         }
     }
 

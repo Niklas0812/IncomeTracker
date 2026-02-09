@@ -21,6 +21,21 @@ enum PaymentSource: String, CaseIterable, Codable, Identifiable {
         case .paypal: return "paperplane.fill"
         }
     }
+
+    var apiValue: String {
+        switch self {
+        case .paysafe: return "paysafe"
+        case .paypal: return "paypal"
+        }
+    }
+
+    init?(apiString: String) {
+        switch apiString.lowercased() {
+        case "paysafe": self = .paysafe
+        case "paypal": self = .paypal
+        default: return nil
+        }
+    }
 }
 
 // MARK: - Transaction Status
@@ -45,6 +60,23 @@ enum TransactionStatus: String, CaseIterable, Codable, Identifiable {
         case .completed: return "checkmark.circle.fill"
         case .pending: return "clock.fill"
         case .failed: return "xmark.circle.fill"
+        }
+    }
+
+    var apiValue: String {
+        switch self {
+        case .completed: return "completed"
+        case .pending: return "pending"
+        case .failed: return "failed"
+        }
+    }
+
+    init?(apiString: String) {
+        switch apiString.lowercased() {
+        case "completed": self = .completed
+        case "pending": self = .pending
+        case "failed": self = .failed
+        default: return nil
         }
     }
 }

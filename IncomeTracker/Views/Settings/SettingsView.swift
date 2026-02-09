@@ -7,6 +7,77 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Server
+                Section {
+                    HStack(spacing: AppTheme.Spacing.sm) {
+                        Image(systemName: "server.rack")
+                            .font(.system(size: 16))
+                            .foregroundStyle(AppTheme.Colors.primaryFallback)
+                            .frame(width: 28, height: 28)
+                            .background(AppTheme.Colors.primaryFallback.opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Server URL")
+                                .font(AppTheme.Typography.callout)
+                                .foregroundStyle(AppTheme.Colors.textPrimary)
+                            TextField("https://your-server.com", text: $viewModel.serverURL)
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(AppTheme.Colors.textSecondary)
+                                .textContentType(.URL)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+                        }
+
+                        Spacer()
+
+                        if viewModel.isCheckingServer {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        } else {
+                            Circle()
+                                .fill(viewModel.isServerReachable ? AppTheme.Colors.positive : AppTheme.Colors.negative)
+                                .frame(width: 10, height: 10)
+                        }
+                    }
+                    .listRowBackground(AppTheme.Colors.cardBackground)
+
+                    HStack(spacing: AppTheme.Spacing.sm) {
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(AppTheme.Colors.warning)
+                            .frame(width: 28, height: 28)
+                            .background(AppTheme.Colors.warning.opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("API Token")
+                                .font(AppTheme.Typography.callout)
+                                .foregroundStyle(AppTheme.Colors.textPrimary)
+                            SecureField("Bearer token", text: $viewModel.apiToken)
+                                .font(AppTheme.Typography.caption)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+                        }
+                    }
+                    .listRowBackground(AppTheme.Colors.cardBackground)
+
+                    Button {
+                        viewModel.checkServerHealth()
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Test Connection")
+                                .font(AppTheme.Typography.callout)
+                                .foregroundStyle(AppTheme.Colors.primaryFallback)
+                            Spacer()
+                        }
+                    }
+                    .listRowBackground(AppTheme.Colors.cardBackground)
+                } header: {
+                    sectionHeader("Server")
+                }
+
                 // Appearance
                 Section {
                     Picker("Theme", selection: $appearanceMode) {
@@ -20,18 +91,6 @@ struct SettingsView: View {
                     sectionHeader("Appearance")
                 } footer: {
                     Text("Choose how the app looks. System follows your device settings.")
-                }
-
-                // Currency
-                Section {
-                    Picker("Currency", selection: $viewModel.selectedCurrency) {
-                        ForEach(viewModel.currencies, id: \.self) { currency in
-                            Text(currency).tag(currency)
-                        }
-                    }
-                    .listRowBackground(AppTheme.Colors.cardBackground)
-                } header: {
-                    sectionHeader("Display")
                 }
 
                 // Notifications
@@ -61,13 +120,28 @@ struct SettingsView: View {
                     sectionHeader("Notifications")
                 }
 
+                // Analytics
+                Section {
+                    NavigationLink {
+                        TelegramResponseTimeView()
+                    } label: {
+                        aboutRow(icon: "paperplane.fill", title: "Telegram Response Times", detail: nil)
+                    }
+                    .listRowBackground(AppTheme.Colors.cardBackground)
+
+                    NavigationLink {
+                        BreakTrackingView()
+                    } label: {
+                        aboutRow(icon: "clock.badge.checkmark", title: "Break Tracking", detail: nil)
+                    }
+                    .listRowBackground(AppTheme.Colors.cardBackground)
+                } header: {
+                    sectionHeader("Analytics")
+                }
+
                 // About
                 Section {
-                    aboutRow(icon: "info.circle.fill", title: "Version", detail: "\(viewModel.appVersion) (\(viewModel.buildNumber))")
-                    aboutRow(icon: "star.fill", title: "Rate This App", detail: nil, isLink: true)
-                    aboutRow(icon: "envelope.fill", title: "Contact Support", detail: nil, isLink: true)
-                    aboutRow(icon: "doc.text.fill", title: "Privacy Policy", detail: nil, isLink: true)
-                    aboutRow(icon: "doc.text.fill", title: "Terms of Service", detail: nil, isLink: true)
+                    aboutRow(icon: "info.circle.fill", title: "Version", detail: viewModel.appVersion)
                 } header: {
                     sectionHeader("About")
                 }
@@ -113,7 +187,7 @@ struct SettingsView: View {
         .listRowBackground(AppTheme.Colors.cardBackground)
     }
 
-    private func aboutRow(icon: String, title: String, detail: String?, isLink: Bool = false) -> some View {
+    private func aboutRow(icon: String, title: String, detail: String?) -> some View {
         HStack(spacing: AppTheme.Spacing.sm) {
             Image(systemName: icon)
                 .font(.system(size: 14))
@@ -131,14 +205,7 @@ struct SettingsView: View {
                     .font(AppTheme.Typography.subheadline)
                     .foregroundStyle(AppTheme.Colors.textTertiary)
             }
-
-            if isLink {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.Colors.textTertiary)
-            }
         }
-        .listRowBackground(AppTheme.Colors.cardBackground)
     }
 }
 

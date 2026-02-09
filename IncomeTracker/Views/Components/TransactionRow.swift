@@ -57,9 +57,10 @@ struct TransactionRow: View {
 struct TransactionRow_Previews: PreviewProvider {
     static var previews: some View {
         List {
-            TransactionRow(transaction: SampleData.transactions[0])
-            TransactionRow(transaction: SampleData.transactions[1])
-            TransactionRow(transaction: SampleData.transactions[2])
+            TransactionRow(transaction: Transaction(
+                id: "preview-1", workerId: 1, workerName: "Test Worker",
+                paymentSource: .paysafe, amount: 150, date: Date(), reference: "TXN-001"
+            ))
         }
     }
 }

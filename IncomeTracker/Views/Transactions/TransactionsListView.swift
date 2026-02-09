@@ -21,7 +21,7 @@ struct TransactionsListView: View {
                 .background(AppTheme.Colors.backgroundPrimary)
 
                 // Transaction list
-                if viewModel.filteredTransactions.isEmpty {
+                if viewModel.transactions.isEmpty && !viewModel.isLoading {
                     EmptyStateView(
                         iconName: "magnifyingglass",
                         title: "No Results",
@@ -30,6 +30,14 @@ struct TransactionsListView: View {
                     ) {
                         viewModel.clearFilters()
                     }
+                } else if viewModel.transactions.isEmpty && viewModel.isLoading {
+                    VStack(spacing: AppTheme.Spacing.md) {
+                        ForEach(0..<5, id: \.self) { _ in
+                            SkeletonView()
+                                .frame(height: 60)
+                        }
+                    }
+                    .padding(AppTheme.Spacing.md)
                 } else {
                     List {
                         ForEach(viewModel.groupedTransactions, id: \.key) { group in
@@ -56,14 +64,23 @@ struct TransactionsListView: View {
                                     .tracking(0.5)
                             }
                         }
+
+                        // Infinite scroll trigger
+                        if viewModel.page < viewModel.totalPages {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .onAppear { viewModel.loadMore() }
+                        }
                     }
                     .listStyle(.plain)
+                    .refreshable { viewModel.fetchData() }
                     .animation(AppTheme.Animation.standard, value: viewModel.selectedSource)
                     .animation(AppTheme.Animation.standard, value: viewModel.selectedStatus)
                 }
 
                 // Summary footer
-                if !viewModel.filteredTransactions.isEmpty {
+                if !viewModel.transactions.isEmpty {
                     summaryFooter
                 }
             }

@@ -44,7 +44,7 @@ struct IncomeChartView: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .automatic) { _ in
+                AxisMarks(values: .automatic(desiredCount: 6)) { _ in
                     AxisValueLabel()
                         .font(AppTheme.Typography.micro)
                         .foregroundStyle(AppTheme.Colors.textTertiary)
@@ -121,7 +121,7 @@ struct IncomeChartView: View {
 struct IncomeChartView_Previews: PreviewProvider {
     static var previews: some View {
         IncomeChartView(
-            dataPoints: DashboardViewModel().chartDataPoints,
+            dataPoints: [],
             period: .monthly
         )
         .padding()

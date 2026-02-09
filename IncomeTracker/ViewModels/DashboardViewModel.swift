@@ -2,106 +2,101 @@ import SwiftUI
 
 final class DashboardViewModel: ObservableObject {
 
-    @Published var selectedPeriod: TimePeriod = .monthly
+    @Published var selectedPeriod: TimePeriod = .monthly {
+        didSet { fetchData() }
+    }
     @Published var isLoading = false
+    @Published var error: String?
 
-    // Filtered data
-    var totalIncome: Decimal { filteredTransactions.reduce(0) { $0 + $1.amount } }
-    var paysafeIncome: Decimal { filteredTransactions.filter { $0.paymentSource == .paysafe }.reduce(0) { $0 + $1.amount } }
-    var paypalIncome: Decimal { filteredTransactions.filter { $0.paymentSource == .paypal }.reduce(0) { $0 + $1.amount } }
+    @Published var totalIncome: Decimal = 0
+    @Published var paysafeIncome: Decimal = 0
+    @Published var paypalIncome: Decimal = 0
+    @Published var paysafePercentChange: Double?
+    @Published var paypalPercentChange: Double?
+    @Published var chartDataPoints: [ChartDataPoint] = []
+    @Published var recentTransactions: [Transaction] = []
+    @Published var topWorkers: [Worker] = []
 
-    var filteredTransactions: [Transaction] {
-        let start = selectedPeriod.startDate
-        return allTransactions
-            .filter { $0.date >= start && $0.status == .completed }
+    private let client = APIClient.shared
+    private let cache = CacheService.shared
+
+    init() {
+        loadCachedData()
+        fetchData()
     }
 
-    // Previous period for % change calculation
-    var previousPeriodPaysafeIncome: Decimal {
-        transactionsInPreviousPeriod.filter { $0.paymentSource == .paysafe }.reduce(0) { $0 + $1.amount }
-    }
+    func fetchData() {
+        isLoading = true
+        error = nil
 
-    var previousPeriodPaypalIncome: Decimal {
-        transactionsInPreviousPeriod.filter { $0.paymentSource == .paypal }.reduce(0) { $0 + $1.amount }
-    }
+        Task {
+            do {
+                let response: DashboardResponse = try await client.request(
+                    .dashboard(period: selectedPeriod.rawValue)
+                )
+                await MainActor.run {
+                    self.totalIncome = Decimal(response.totalIncome)
+                    self.paysafeIncome = Decimal(response.paysafeIncome)
+                    self.paypalIncome = Decimal(response.paypalIncome)
+                    self.paysafePercentChange = response.paysafeChange
+                    self.paypalPercentChange = response.paypalChange
 
-    var paysafePercentChange: Double? {
-        percentChange(current: paysafeIncome, previous: previousPeriodPaysafeIncome)
-    }
+                    self.chartDataPoints = response.chartData.map { dto in
+                        ChartDataPoint(
+                            label: dto.label,
+                            date: Self.parseDate(dto.date),
+                            paysafeAmount: Decimal(dto.paysafe),
+                            paypalAmount: Decimal(dto.paypal)
+                        )
+                    }
 
-    var paypalPercentChange: Double? {
-        percentChange(current: paypalIncome, previous: previousPeriodPaypalIncome)
-    }
+                    self.recentTransactions = response.recentTransactions.map { Transaction(from: $0) }
 
-    var recentTransactions: [Transaction] {
-        Array(allTransactions.prefix(5))
-    }
+                    self.topWorkers = response.topWorkers.map { tw in
+                        Worker(
+                            id: tw.workerId,
+                            name: tw.workerName,
+                            totalEarnings: Decimal(tw.total)
+                        )
+                    }
 
-    var topWorkers: [Worker] {
-        let workerEarnings = Dictionary(grouping: filteredTransactions, by: \.workerId)
-        return allWorkers
-            .map { worker in
-                var w = worker
-                w.totalEarnings = workerEarnings[worker.id]?.reduce(0) { $0 + $1.amount } ?? 0
-                return w
+                    self.isLoading = false
+                    self.cache.save(response, forKey: "dashboard_\(self.selectedPeriod.rawValue)")
+                }
+            } catch {
+                await MainActor.run {
+                    self.error = (error as? NetworkError)?.errorDescription ?? error.localizedDescription
+                    self.isLoading = false
+                }
             }
-            .filter { $0.totalEarnings > 0 }
-            .sorted { $0.totalEarnings > $1.totalEarnings }
-            .prefix(5)
-            .map { $0 }
-    }
-
-    // Chart data points grouped by date
-    var chartDataPoints: [ChartDataPoint] {
-        let grouped = Dictionary(grouping: filteredTransactions) { transaction -> String in
-            chartGroupKey(for: transaction.date)
-        }
-
-        return grouped.map { key, txns in
-            let paysafe = txns.filter { $0.paymentSource == .paysafe }.reduce(0) { $0 + $1.amount }
-            let paypal = txns.filter { $0.paymentSource == .paypal }.reduce(0) { $0 + $1.amount }
-            let date = txns.first?.date ?? .now
-            return ChartDataPoint(label: key, date: date, paysafeAmount: paysafe, paypalAmount: paypal)
-        }
-        .sorted { $0.date < $1.date }
-    }
-
-    // MARK: - Data source
-
-    private let allTransactions = SampleData.transactions
-    private let allWorkers = SampleData.workers
-
-    // MARK: - Helpers
-
-    private var transactionsInPreviousPeriod: [Transaction] {
-        let periodStart = selectedPeriod.startDate
-        let previousStart = selectedPeriod.previousPeriodStartDate
-        return allTransactions.filter {
-            $0.date >= previousStart && $0.date < periodStart && $0.status == .completed
         }
     }
 
-    private func percentChange(current: Decimal, previous: Decimal) -> Double? {
-        guard previous > 0 else { return nil }
-        let change = ((current - previous) / previous) * 100
-        return NSDecimalNumber(decimal: change).doubleValue
+    private func loadCachedData() {
+        guard let cached: DashboardResponse = cache.load(forKey: "dashboard_\(selectedPeriod.rawValue)") else { return }
+        totalIncome = Decimal(cached.totalIncome)
+        paysafeIncome = Decimal(cached.paysafeIncome)
+        paypalIncome = Decimal(cached.paypalIncome)
+        paysafePercentChange = cached.paysafeChange
+        paypalPercentChange = cached.paypalChange
+        chartDataPoints = cached.chartData.map { dto in
+            ChartDataPoint(
+                label: dto.label,
+                date: Self.parseDate(dto.date),
+                paysafeAmount: Decimal(dto.paysafe),
+                paypalAmount: Decimal(dto.paypal)
+            )
+        }
+        recentTransactions = cached.recentTransactions.map { Transaction(from: $0) }
+        topWorkers = cached.topWorkers.map { tw in
+            Worker(id: tw.workerId, name: tw.workerName, totalEarnings: Decimal(tw.total))
+        }
     }
 
-    private func chartGroupKey(for date: Date) -> String {
+    private static func parseDate(_ str: String) -> Date {
         let formatter = DateFormatter()
-        switch selectedPeriod {
-        case .daily:
-            formatter.dateFormat = "HH:00"
-        case .weekly:
-            formatter.dateFormat = "EEE"
-        case .monthly:
-            formatter.dateFormat = "d MMM"
-        case .threeMonths, .sixMonths:
-            formatter.dateFormat = "MMM d"
-        case .oneYear:
-            formatter.dateFormat = "MMM"
-        }
-        return formatter.string(from: date)
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter.date(from: str) ?? Date()
     }
 }
 

@@ -12,7 +12,6 @@
 		A10001010000000000000003 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000003 /* Enums.swift */; };
 		A10001010000000000000004 /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000004 /* Worker.swift */; };
 		A10001010000000000000005 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000005 /* Transaction.swift */; };
-		A10001010000000000000006 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000006 /* SampleData.swift */; };
 		A10001010000000000000007 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000007 /* DashboardViewModel.swift */; };
 		A10001010000000000000008 /* TransactionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000008 /* TransactionsViewModel.swift */; };
 		A10001010000000000000009 /* WorkersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000009 /* WorkersViewModel.swift */; };
@@ -39,6 +38,18 @@
 		A10001010000000000000030 /* Decimal+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000030 /* Decimal+Formatting.swift */; };
 		A10001010000000000000031 /* Color+Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000031 /* Color+Brand.swift */; };
 		A10001010000000000000032 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000032 /* Assets.xcassets */; };
+		A10001010000000000000033 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000035 /* APIClient.swift */; };
+		A10001010000000000000034 /* APIEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000036 /* APIEndpoints.swift */; };
+		A10001010000000000000035 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000037 /* APIModels.swift */; };
+		A10001010000000000000036 /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000038 /* NetworkError.swift */; };
+		A10001010000000000000037 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000039 /* NotificationService.swift */; };
+		A10001010000000000000038 /* PollingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000040 /* PollingService.swift */; };
+		A10001010000000000000039 /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000041 /* CacheService.swift */; };
+		A10001010000000000000040 /* shopify_sale.caf in Resources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000042 /* shopify_sale.caf */; };
+		A10001010000000000000041 /* ScreenshotViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000043 /* ScreenshotViewer.swift */; };
+		A10001010000000000000042 /* EditWorkerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000044 /* EditWorkerSheet.swift */; };
+		A10001010000000000000043 /* TelegramResponseTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000045 /* TelegramResponseTimeView.swift */; };
+		A10001010000000000000044 /* BreakTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000046 /* BreakTrackingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,7 +58,6 @@
 		A20001010000000000000003 /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
 		A20001010000000000000004 /* Worker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Worker.swift; sourceTree = "<group>"; };
 		A20001010000000000000005 /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
-		A20001010000000000000006 /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
 		A20001010000000000000007 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		A20001010000000000000008 /* TransactionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsViewModel.swift; sourceTree = "<group>"; };
 		A20001010000000000000009 /* WorkersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkersViewModel.swift; sourceTree = "<group>"; };
@@ -76,6 +86,18 @@
 		A20001010000000000000032 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20001010000000000000033 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20001010000000000000034 /* IncomeTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IncomeTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20001010000000000000035 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		A20001010000000000000036 /* APIEndpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIEndpoints.swift; sourceTree = "<group>"; };
+		A20001010000000000000037 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
+		A20001010000000000000038 /* NetworkError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkError.swift; sourceTree = "<group>"; };
+		A20001010000000000000039 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		A20001010000000000000040 /* PollingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingService.swift; sourceTree = "<group>"; };
+		A20001010000000000000041 /* CacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheService.swift; sourceTree = "<group>"; };
+		A20001010000000000000042 /* shopify_sale.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = shopify_sale.caf; sourceTree = "<group>"; };
+		A20001010000000000000043 /* ScreenshotViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotViewer.swift; sourceTree = "<group>"; };
+		A20001010000000000000044 /* EditWorkerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditWorkerSheet.swift; sourceTree = "<group>"; };
+		A20001010000000000000045 /* TelegramResponseTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramResponseTimeView.swift; sourceTree = "<group>"; };
+		A20001010000000000000046 /* BreakTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakTrackingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,10 +133,12 @@
 				A40001010000000000000003 /* App */,
 				A40001010000000000000004 /* Theme */,
 				A40001010000000000000005 /* Models */,
-				A40001010000000000000006 /* MockData */,
+				A40001010000000000000016 /* Networking */,
+				A40001010000000000000017 /* Services */,
 				A40001010000000000000007 /* ViewModels */,
 				A40001010000000000000008 /* Views */,
 				A40001010000000000000015 /* Extensions */,
+				A40001010000000000000018 /* Sounds */,
 				A20001010000000000000032 /* Assets.xcassets */,
 				A20001010000000000000033 /* Info.plist */,
 			);
@@ -147,12 +171,33 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
-		A40001010000000000000006 /* MockData */ = {
+		A40001010000000000000016 /* Networking */ = {
 			isa = PBXGroup;
 			children = (
-				A20001010000000000000006 /* SampleData.swift */,
+				A20001010000000000000035 /* APIClient.swift */,
+				A20001010000000000000036 /* APIEndpoints.swift */,
+				A20001010000000000000037 /* APIModels.swift */,
+				A20001010000000000000038 /* NetworkError.swift */,
 			);
-			path = MockData;
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		A40001010000000000000017 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A20001010000000000000039 /* NotificationService.swift */,
+				A20001010000000000000040 /* PollingService.swift */,
+				A20001010000000000000041 /* CacheService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A40001010000000000000018 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				A20001010000000000000042 /* shopify_sale.caf */,
+			);
+			path = Sounds;
 			sourceTree = "<group>";
 		};
 		A40001010000000000000007 /* ViewModels */ = {
@@ -194,6 +239,7 @@
 				A20001010000000000000014 /* TransactionsListView.swift */,
 				A20001010000000000000015 /* TransactionDetailSheet.swift */,
 				A20001010000000000000016 /* TransactionFilterBar.swift */,
+				A20001010000000000000043 /* ScreenshotViewer.swift */,
 			);
 			path = Transactions;
 			sourceTree = "<group>";
@@ -204,6 +250,7 @@
 				A20001010000000000000017 /* WorkersListView.swift */,
 				A20001010000000000000018 /* WorkerDetailView.swift */,
 				A20001010000000000000019 /* AddWorkerSheet.swift */,
+				A20001010000000000000044 /* EditWorkerSheet.swift */,
 			);
 			path = Workers;
 			sourceTree = "<group>";
@@ -212,6 +259,8 @@
 			isa = PBXGroup;
 			children = (
 				A20001010000000000000020 /* SettingsView.swift */,
+				A20001010000000000000045 /* TelegramResponseTimeView.swift */,
+				A20001010000000000000046 /* BreakTrackingView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -301,6 +350,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10001010000000000000032 /* Assets.xcassets in Resources */,
+				A10001010000000000000040 /* shopify_sale.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -316,7 +366,6 @@
 				A10001010000000000000003 /* Enums.swift in Sources */,
 				A10001010000000000000004 /* Worker.swift in Sources */,
 				A10001010000000000000005 /* Transaction.swift in Sources */,
-				A10001010000000000000006 /* SampleData.swift in Sources */,
 				A10001010000000000000007 /* DashboardViewModel.swift in Sources */,
 				A10001010000000000000008 /* TransactionsViewModel.swift in Sources */,
 				A10001010000000000000009 /* WorkersViewModel.swift in Sources */,
@@ -342,6 +391,17 @@
 				A10001010000000000000029 /* Date+Helpers.swift in Sources */,
 				A10001010000000000000030 /* Decimal+Formatting.swift in Sources */,
 				A10001010000000000000031 /* Color+Brand.swift in Sources */,
+				A10001010000000000000033 /* APIClient.swift in Sources */,
+				A10001010000000000000034 /* APIEndpoints.swift in Sources */,
+				A10001010000000000000035 /* APIModels.swift in Sources */,
+				A10001010000000000000036 /* NetworkError.swift in Sources */,
+				A10001010000000000000037 /* NotificationService.swift in Sources */,
+				A10001010000000000000038 /* PollingService.swift in Sources */,
+				A10001010000000000000039 /* CacheService.swift in Sources */,
+				A10001010000000000000041 /* ScreenshotViewer.swift in Sources */,
+				A10001010000000000000042 /* EditWorkerSheet.swift in Sources */,
+				A10001010000000000000043 /* TelegramResponseTimeView.swift in Sources */,
+				A10001010000000000000044 /* BreakTrackingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

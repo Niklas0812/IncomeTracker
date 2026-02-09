@@ -21,14 +21,12 @@ struct WorkerCard: View {
                     .font(AppTheme.Typography.headline)
                     .foregroundStyle(AppTheme.Colors.textPrimary)
             }
-
-            SourceBadge(source: worker.paymentSource, style: .pill)
         }
         .frame(width: 130)
         .padding(AppTheme.Spacing.md)
         .cardStyle()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(worker.name), \(worker.totalEarnings.eurFormatted), \(worker.paymentSource.rawValue)")
+        .accessibilityLabel("\(worker.name), \(worker.totalEarnings.eurFormatted)")
     }
 }
 
@@ -36,9 +34,7 @@ struct WorkerCard_Previews: PreviewProvider {
     static var previews: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 12) {
-                ForEach(SampleData.workers.prefix(4)) { worker in
-                    WorkerCard(worker: worker)
-                }
+                WorkerCard(worker: Worker(id: 1, name: "Test Worker", totalEarnings: 1500))
             }
             .padding()
         }

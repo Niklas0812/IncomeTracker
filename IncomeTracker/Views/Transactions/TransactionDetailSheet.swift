@@ -3,6 +3,7 @@ import SwiftUI
 struct TransactionDetailSheet: View {
     let transaction: Transaction
     @Environment(\.dismiss) private var dismiss
+    @State private var showScreenshot = false
 
     var body: some View {
         NavigationStack {
@@ -30,30 +31,27 @@ struct TransactionDetailSheet: View {
                         Divider().padding(.leading, AppTheme.Spacing.md)
                         detailRow(label: "Time", value: transaction.date.timeString)
                         Divider().padding(.leading, AppTheme.Spacing.md)
-                        detailRow(label: "Currency", value: transaction.currency)
-                        Divider().padding(.leading, AppTheme.Spacing.md)
                         referenceRow
                     }
                     .cardStyle()
 
-                    // View Worker link
-                    NavigationLink {
-                        WorkerDetailView(
-                            worker: SampleData.workers.first { $0.id == transaction.workerId } ?? SampleData.workers[0],
-                            viewModel: WorkersViewModel()
-                        )
-                    } label: {
-                        HStack {
-                            Image(systemName: "person.circle")
-                            Text("View Worker Profile")
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
+                    // Screenshot button
+                    if transaction.hasScreenshot {
+                        Button {
+                            showScreenshot = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "photo")
+                                Text("View Screenshot")
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .font(AppTheme.Typography.callout)
+                            .foregroundStyle(AppTheme.Colors.primaryFallback)
+                            .padding(AppTheme.Spacing.md)
+                            .cardStyle()
                         }
-                        .font(AppTheme.Typography.callout)
-                        .foregroundStyle(AppTheme.Colors.primaryFallback)
-                        .padding(AppTheme.Spacing.md)
-                        .cardStyle()
                     }
                 }
                 .padding(.horizontal, AppTheme.Spacing.md)
@@ -66,6 +64,11 @@ struct TransactionDetailSheet: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
                         .font(AppTheme.Typography.callout)
+                }
+            }
+            .sheet(isPresented: $showScreenshot) {
+                if let filename = transaction.screenshotFilename {
+                    ScreenshotViewer(filename: filename)
                 }
             }
         }
@@ -134,6 +137,14 @@ struct TransactionDetailSheet: View {
 
 struct TransactionDetailSheet_Previews: PreviewProvider {
     static var previews: some View {
-        TransactionDetailSheet(transaction: SampleData.transactions[0])
+        TransactionDetailSheet(transaction: Transaction(
+            id: "test-1",
+            workerId: 123,
+            workerName: "Test Worker",
+            paymentSource: .paysafe,
+            amount: 100,
+            date: Date(),
+            reference: "TXN-001"
+        ))
     }
 }

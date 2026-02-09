@@ -9,9 +9,6 @@ struct WorkersListView: View {
             VStack(spacing: 0) {
                 // Filter bar
                 VStack(spacing: AppTheme.Spacing.sm) {
-                    // Source segmented control
-                    sourceSegment
-
                     // Search
                     HStack(spacing: AppTheme.Spacing.xs) {
                         Image(systemName: "magnifyingglass")
@@ -37,7 +34,7 @@ struct WorkersListView: View {
                 .background(AppTheme.Colors.backgroundPrimary)
 
                 // Worker list
-                if viewModel.filteredWorkers.isEmpty {
+                if viewModel.filteredWorkers.isEmpty && !viewModel.isLoading {
                     EmptyStateView(
                         iconName: "person.2",
                         title: "No Workers Found",
@@ -46,6 +43,14 @@ struct WorkersListView: View {
                     ) {
                         showAddSheet = true
                     }
+                } else if viewModel.filteredWorkers.isEmpty && viewModel.isLoading {
+                    VStack(spacing: AppTheme.Spacing.md) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            SkeletonView()
+                                .frame(height: 60)
+                        }
+                    }
+                    .padding(AppTheme.Spacing.md)
                 } else {
                     List {
                         ForEach(viewModel.filteredWorkers) { worker in
@@ -60,10 +65,17 @@ struct WorkersListView: View {
                                 bottom: AppTheme.Spacing.xs,
                                 trailing: AppTheme.Spacing.md
                             ))
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    viewModel.deleteWorker(userId: worker.id) { _ in }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                     .listStyle(.plain)
-                    .animation(AppTheme.Animation.standard, value: viewModel.selectedSource)
+                    .refreshable { viewModel.fetchWorkers() }
                     .animation(AppTheme.Animation.standard, value: viewModel.sortOption)
                 }
             }
@@ -92,44 +104,11 @@ struct WorkersListView: View {
                 }
             }
             .sheet(isPresented: $showAddSheet) {
-                AddWorkerSheet()
+                AddWorkerSheet(viewModel: viewModel)
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
             }
         }
-    }
-
-    // MARK: - Source Segment
-
-    private var sourceSegment: some View {
-        HStack(spacing: AppTheme.Spacing.xxs) {
-            segmentButton(title: "All", isSelected: viewModel.selectedSource == nil) {
-                viewModel.selectedSource = nil
-            }
-            ForEach(PaymentSource.allCases) { source in
-                segmentButton(title: source.rawValue, isSelected: viewModel.selectedSource == source) {
-                    viewModel.selectedSource = viewModel.selectedSource == source ? nil : source
-                }
-            }
-        }
-        .padding(AppTheme.Spacing.xxs)
-        .background(AppTheme.Colors.backgroundSecondary)
-        .clipShape(Capsule())
-    }
-
-    private func segmentButton(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: {
-            withAnimation(AppTheme.Animation.spring) { action() }
-        }) {
-            Text(title)
-                .font(AppTheme.Typography.captionBold)
-                .foregroundStyle(isSelected ? .white : AppTheme.Colors.textSecondary)
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.xs)
-                .background(isSelected ? AppTheme.Colors.primaryFallback : .clear)
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Worker Row
@@ -148,8 +127,6 @@ struct WorkersListView: View {
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
                 HStack(spacing: AppTheme.Spacing.xs) {
-                    SourceBadge(source: worker.paymentSource, style: .pill)
-
                     Text(worker.isActive ? "Active" : "Inactive")
                         .font(AppTheme.Typography.micro)
                         .fontWeight(.semibold)
@@ -160,6 +137,12 @@ struct WorkersListView: View {
                             (worker.isActive ? AppTheme.Colors.positive : AppTheme.Colors.textTertiary).opacity(0.12)
                         )
                         .clipShape(Capsule())
+
+                    if let rate = worker.hourlyRate {
+                        Text("$\(String(format: "%.2f", rate))/hr")
+                            .font(AppTheme.Typography.micro)
+                            .foregroundStyle(AppTheme.Colors.textTertiary)
+                    }
                 }
             }
 
