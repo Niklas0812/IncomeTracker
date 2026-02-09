@@ -1,16 +1,65 @@
 import Foundation
 
+// MARK: - Flexible number-or-string for percent change
+
+/// The backend can return a Double, a String like "no_activity", or null for percent change fields.
+enum PercentChangeValue: Codable {
+    case number(Double)
+    case noActivity
+    case none
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            self = .none
+            return
+        }
+        if let d = try? container.decode(Double.self) {
+            self = .number(d)
+            return
+        }
+        if let s = try? container.decode(String.self), s == "no_activity" {
+            self = .noActivity
+            return
+        }
+        self = .none
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .number(let d): try container.encode(d)
+        case .noActivity: try container.encode("no_activity")
+        case .none: try container.encodeNil()
+        }
+    }
+
+    var doubleValue: Double? {
+        if case .number(let d) = self { return d }
+        return nil
+    }
+
+    var isNoActivity: Bool {
+        if case .noActivity = self { return true }
+        return false
+    }
+}
+
 // MARK: - Dashboard
 
 struct DashboardResponse: Codable {
     let totalIncome: Double
     let paysafeIncome: Double
     let paypalIncome: Double
-    let paysafeChange: Double?
-    let paypalChange: Double?
+    let paysafeChange: PercentChangeValue
+    let paypalChange: PercentChangeValue
     let chartData: [ChartDataPointDTO]
     let topWorkers: [TopWorkerDTO]
     let recentTransactions: [TransactionDTO]
+    let paysafeSparkline: [Double]
+    let paypalSparkline: [Double]
+    let paysafeStatus: String
+    let paypalStatus: String
     let period: String
 
     enum CodingKeys: String, CodingKey {
@@ -22,6 +71,10 @@ struct DashboardResponse: Codable {
         case chartData = "chart_data"
         case topWorkers = "top_workers"
         case recentTransactions = "recent_transactions"
+        case paysafeSparkline = "paysafe_sparkline"
+        case paypalSparkline = "paypal_sparkline"
+        case paysafeStatus = "paysafe_status"
+        case paypalStatus = "paypal_status"
         case period
     }
 }
@@ -124,10 +177,12 @@ struct WorkerDTO: Codable {
 struct WorkerDetailResponse: Codable {
     let worker: WorkerDetailDTO
     let recentTransactions: [TransactionDTO]
+    let period: String?
 
     enum CodingKeys: String, CodingKey {
         case worker
         case recentTransactions = "recent_transactions"
+        case period
     }
 }
 
@@ -180,5 +235,95 @@ struct PaymentBreakdownResponse: Codable {
         case transactionCount = "transaction_count"
         case hourlyRate = "hourly_rate"
         case dailyHours = "daily_hours"
+    }
+}
+
+// MARK: - Available Workers
+
+struct AvailableWorkersResponse: Codable {
+    let workers: [AvailableWorkerDTO]
+}
+
+struct AvailableWorkerDTO: Codable, Identifiable, Hashable {
+    let userId: Int
+    let displayName: String
+
+    var id: Int { userId }
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case displayName = "display_name"
+    }
+}
+
+// MARK: - Telegram
+
+struct TelegramUsersResponse: Codable {
+    let status: String?
+    let message: String?
+    let count: Int?
+    let data: [TelegramUserDTO]?
+    let error: String?
+}
+
+struct TelegramUserDTO: Codable, Identifiable {
+    let userId: String
+    let phoneNumber: String?
+    let authStatus: String?
+    let sessionFile: String?
+
+    var id: String { userId }
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case phoneNumber = "phone_number"
+        case authStatus = "auth_status"
+        case sessionFile = "session_file"
+    }
+}
+
+struct TelegramActionResponse: Codable {
+    let status: String?
+    let message: String?
+    let error: String?
+}
+
+struct TelegramAnalysisResponse: Codable {
+    let userId: String?
+    let analysisTimestamp: String?
+    let results: [TelegramAnalysisResultDTO]?
+    let error: String?
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case analysisTimestamp = "analysis_timestamp"
+        case results
+        case error
+    }
+}
+
+struct TelegramAnalysisResultDTO: Codable, Identifiable {
+    let timeframe: String?
+    let totalMessages: Int?
+    let totalResponses: Int?
+    let avgResponseMinutes: Double?
+    let avgResponseHours: Double?
+    let avgResponseDays: Double?
+    let responsesOver10min: Int?
+    let responsesOver10minPercent: Double?
+    let error: String?
+
+    var id: String { timeframe ?? UUID().uuidString }
+
+    enum CodingKeys: String, CodingKey {
+        case timeframe
+        case totalMessages = "total_messages"
+        case totalResponses = "total_responses"
+        case avgResponseMinutes = "avg_response_minutes"
+        case avgResponseHours = "avg_response_hours"
+        case avgResponseDays = "avg_response_days"
+        case responsesOver10min = "responses_over_10min"
+        case responsesOver10minPercent = "responses_over_10min_percent"
+        case error
     }
 }

@@ -18,13 +18,7 @@ struct TransactionRow: View {
                     .font(AppTheme.Typography.headline)
                     .foregroundStyle(AppTheme.Colors.textPrimary)
 
-                HStack(spacing: AppTheme.Spacing.xs) {
-                    Text(transaction.reference)
-                        .font(AppTheme.Typography.caption)
-                        .foregroundStyle(AppTheme.Colors.textTertiary)
-
-                    SourceBadge(source: transaction.paymentSource, style: .pill)
-                }
+                SourceBadge(source: transaction.paymentSource, style: .pill)
             }
 
             Spacer()

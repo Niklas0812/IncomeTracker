@@ -101,14 +101,16 @@ struct DashboardView: View {
             SourceBreakdownCard(
                 source: .paysafe,
                 amount: viewModel.paysafeIncome,
-                percentChange: viewModel.paysafePercentChange,
-                transactions: viewModel.recentTransactions
+                changeValue: viewModel.paysafeChange,
+                sparklineData: viewModel.paysafeSparkline,
+                status: viewModel.paysafeStatus
             )
             SourceBreakdownCard(
                 source: .paypal,
                 amount: viewModel.paypalIncome,
-                percentChange: viewModel.paypalPercentChange,
-                transactions: viewModel.recentTransactions
+                changeValue: viewModel.paypalChange,
+                sparklineData: viewModel.paypalSparkline,
+                status: viewModel.paypalStatus
             )
         }
     }

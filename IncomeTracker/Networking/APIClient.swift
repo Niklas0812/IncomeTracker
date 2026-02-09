@@ -3,18 +3,21 @@ import Foundation
 final class APIClient {
     static let shared = APIClient()
 
+    private static let defaultURL = "https://reggae-adjacent-campbell-miracle.trycloudflare.com"
+    private static let hardcodedToken = "changeme"
+
     private let session: URLSession
     private let decoder: JSONDecoder
 
     var baseURL: String {
-        get { UserDefaults.standard.string(forKey: "serverURL") ?? "" }
+        get {
+            let stored = UserDefaults.standard.string(forKey: "serverURL") ?? ""
+            return stored.isEmpty ? Self.defaultURL : stored
+        }
         set { UserDefaults.standard.set(newValue, forKey: "serverURL") }
     }
 
-    var apiToken: String {
-        get { UserDefaults.standard.string(forKey: "apiToken") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "apiToken") }
-    }
+    private var apiToken: String { Self.hardcodedToken }
 
     private init() {
         let config = URLSessionConfiguration.default

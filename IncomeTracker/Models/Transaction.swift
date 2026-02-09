@@ -48,9 +48,7 @@ struct Transaction: Identifiable, Hashable {
         self.screenshotFilename = dto.screenshotFilename
 
         if let dateStr = dto.date {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-            self.date = formatter.date(from: dateStr) ?? Date()
+            self.date = Date.fromAPIString(dateStr) ?? Date()
         } else {
             self.date = Date()
         }

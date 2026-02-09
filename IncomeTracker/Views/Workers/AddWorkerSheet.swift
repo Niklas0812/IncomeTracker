@@ -4,50 +4,71 @@ struct AddWorkerSheet: View {
     @Environment(\.dismiss) private var dismiss
     let viewModel: WorkersViewModel
 
-    @State private var userId = ""
+    @State private var selectedWorker: AvailableWorkerDTO?
+    @State private var manualUserId = ""
     @State private var name = ""
     @State private var hourlyRate = ""
     @State private var dailyHours = "12"
     @State private var isLoading = false
     @State private var showValidation = false
     @State private var errorMessage: String?
+    @State private var useManualEntry = false
+
+    private var resolvedUserId: Int? {
+        if let selected = selectedWorker {
+            return selected.userId
+        }
+        return Int(manualUserId)
+    }
+
+    private var resolvedName: String {
+        if let selected = selectedWorker {
+            return name.isEmpty ? selected.displayName : name
+        }
+        return name.trimmingCharacters(in: .whitespaces)
+    }
 
     private var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty &&
-        Int(userId) != nil
+        resolvedUserId != nil && !resolvedName.isEmpty
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
-                        TextField("Telegram User ID", text: $userId)
-                            .font(AppTheme.Typography.body)
-                            .keyboardType(.numberPad)
-                            .onChange(of: userId) { _ in showValidation = false }
+                    if viewModel.availableWorkers.isEmpty && !useManualEntry {
+                        // No available workers, show manual entry
+                        manualEntryFields
+                    } else if useManualEntry {
+                        manualEntryFields
 
-                        if showValidation && Int(userId) == nil {
-                            Text("Valid numeric User ID is required")
-                                .font(AppTheme.Typography.caption)
-                                .foregroundStyle(AppTheme.Colors.negative)
-                                .transition(.move(edge: .top).combined(with: .opacity))
+                        if !viewModel.availableWorkers.isEmpty {
+                            Button("Select from existing workers") {
+                                useManualEntry = false
+                            }
+                            .font(AppTheme.Typography.caption)
                         }
-                    }
-
-                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
-                        TextField("Username", text: $name)
-                            .font(AppTheme.Typography.body)
-                            .textContentType(.name)
-                            .autocorrectionDisabled()
-                            .onChange(of: name) { _ in showValidation = false }
-
-                        if showValidation && name.trimmingCharacters(in: .whitespaces).isEmpty {
-                            Text("Name is required")
-                                .font(AppTheme.Typography.caption)
-                                .foregroundStyle(AppTheme.Colors.negative)
-                                .transition(.move(edge: .top).combined(with: .opacity))
+                    } else {
+                        Picker("Worker", selection: $selectedWorker) {
+                            Text("Select a worker...").tag(nil as AvailableWorkerDTO?)
+                            ForEach(viewModel.availableWorkers) { worker in
+                                Text("\(worker.displayName) (\(worker.userId))")
+                                    .tag(worker as AvailableWorkerDTO?)
+                            }
                         }
+
+                        if selectedWorker != nil {
+                            TextField("Display Name (optional override)", text: $name)
+                                .font(AppTheme.Typography.body)
+                                .textContentType(.name)
+                                .autocorrectionDisabled()
+                        }
+
+                        Button("Enter ID manually") {
+                            useManualEntry = true
+                            selectedWorker = nil
+                        }
+                        .font(AppTheme.Typography.caption)
                     }
                 } header: {
                     Text("Worker Information")
@@ -85,13 +106,13 @@ struct AddWorkerSheet: View {
                         HStack(spacing: AppTheme.Spacing.sm) {
                             AvatarView(
                                 initials: previewInitials,
-                                color: Color.fromString(name),
+                                color: Color.fromString(resolvedName),
                                 size: 44
                             )
                             VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
-                                Text(name.trimmingCharacters(in: .whitespaces))
+                                Text(resolvedName)
                                     .font(AppTheme.Typography.headline)
-                                Text("ID: \(userId)")
+                                Text("ID: \(resolvedUserId ?? 0)")
                                     .font(AppTheme.Typography.caption)
                                     .foregroundStyle(AppTheme.Colors.textTertiary)
                             }
@@ -131,28 +152,64 @@ struct AddWorkerSheet: View {
                     .disabled(isLoading)
                 }
             }
+            .onAppear {
+                viewModel.fetchAvailableWorkers()
+            }
+        }
+    }
+
+    private var manualEntryFields: some View {
+        Group {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
+                TextField("Telegram User ID", text: $manualUserId)
+                    .font(AppTheme.Typography.body)
+                    .keyboardType(.numberPad)
+                    .onChange(of: manualUserId) { _ in showValidation = false }
+
+                if showValidation && Int(manualUserId) == nil {
+                    Text("Valid numeric User ID is required")
+                        .font(AppTheme.Typography.caption)
+                        .foregroundStyle(AppTheme.Colors.negative)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
+                TextField("Username", text: $name)
+                    .font(AppTheme.Typography.body)
+                    .textContentType(.name)
+                    .autocorrectionDisabled()
+                    .onChange(of: name) { _ in showValidation = false }
+
+                if showValidation && name.trimmingCharacters(in: .whitespaces).isEmpty {
+                    Text("Name is required")
+                        .font(AppTheme.Typography.caption)
+                        .foregroundStyle(AppTheme.Colors.negative)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
         }
     }
 
     private var previewInitials: String {
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
-        let parts = trimmed.split(separator: " ")
+        let n = resolvedName
+        let parts = n.split(separator: " ")
         if parts.count >= 2 {
             return String(parts[0].prefix(1) + parts[1].prefix(1)).uppercased()
         }
-        return String(trimmed.prefix(2)).uppercased()
+        return String(n.prefix(2)).uppercased()
     }
 
     private func save() {
         withAnimation(AppTheme.Animation.quick) { showValidation = true }
-        guard isValid else { return }
+        guard isValid, let uid = resolvedUserId else { return }
 
         isLoading = true
         errorMessage = nil
 
         viewModel.createWorker(
-            userId: Int(userId)!,
-            username: name.trimmingCharacters(in: .whitespaces),
+            userId: uid,
+            username: resolvedName,
             hourlyRate: Double(hourlyRate) ?? 1.0,
             dailyHours: Double(dailyHours) ?? 12.0
         ) { success in

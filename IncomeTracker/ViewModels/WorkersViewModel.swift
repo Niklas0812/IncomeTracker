@@ -10,6 +10,8 @@ final class WorkersViewModel: ObservableObject {
 
     @Published var workers: [Worker] = []
     @Published var workerTransactions: [Int: [Transaction]] = [:]
+    @Published var workerEarnings: [Int: Decimal] = [:]
+    @Published var availableWorkers: [AvailableWorkerDTO] = []
 
     private let client = APIClient.shared
 
@@ -57,17 +59,33 @@ final class WorkersViewModel: ObservableObject {
         }
     }
 
-    func fetchWorkerDetail(_ worker: Worker, completion: @escaping (WorkerDetailResponse?) -> Void) {
+    func fetchWorkerDetail(_ worker: Worker, period: TimePeriod = .monthly, completion: @escaping (WorkerDetailResponse?) -> Void) {
         Task {
             do {
-                let response: WorkerDetailResponse = try await client.request(.workerDetail(userId: worker.id))
+                let response: WorkerDetailResponse = try await client.request(
+                    .workerDetail(userId: worker.id, period: period.rawValue)
+                )
                 await MainActor.run {
                     let txns = response.recentTransactions.map { Transaction(from: $0) }
                     self.workerTransactions[worker.id] = txns
+                    self.workerEarnings[worker.id] = Decimal(response.worker.totalEarnings)
                     completion(response)
                 }
             } catch {
                 await MainActor.run { completion(nil) }
+            }
+        }
+    }
+
+    func fetchAvailableWorkers() {
+        Task {
+            do {
+                let response: AvailableWorkersResponse = try await client.request(.availableWorkers)
+                await MainActor.run {
+                    self.availableWorkers = response.workers
+                }
+            } catch {
+                // silently fail
             }
         }
     }
@@ -77,10 +95,7 @@ final class WorkersViewModel: ObservableObject {
     }
 
     func earnings(for worker: Worker, in period: TimePeriod) -> Decimal {
-        let start = period.startDate
-        return transactions(for: worker)
-            .filter { $0.date >= start && $0.status == .completed }
-            .reduce(0) { $0 + $1.amount }
+        workerEarnings[worker.id] ?? worker.totalEarnings
     }
 
     func chartData(for worker: Worker, in period: TimePeriod) -> [WorkerChartPoint] {

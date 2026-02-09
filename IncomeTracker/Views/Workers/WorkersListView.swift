@@ -82,7 +82,7 @@ struct WorkersListView: View {
             .background(AppTheme.Colors.backgroundPrimary)
             .navigationTitle("Workers")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Picker("Sort by", selection: $viewModel.sortOption) {
                             ForEach(WorkerSortOption.allCases) { option in
@@ -93,8 +93,6 @@ struct WorkersListView: View {
                         Image(systemName: "arrow.up.arrow.down.circle")
                             .foregroundStyle(AppTheme.Colors.primaryFallback)
                     }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showAddSheet = true
                     } label: {

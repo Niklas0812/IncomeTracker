@@ -2,7 +2,6 @@ import SwiftUI
 
 struct TransactionFilterBar: View {
     @Binding var selectedSource: PaymentSource?
-    @Binding var selectedStatus: TransactionStatus?
     @Binding var searchText: String
 
     var body: some View {
@@ -11,7 +10,7 @@ struct TransactionFilterBar: View {
             HStack(spacing: AppTheme.Spacing.xs) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(AppTheme.Colors.textTertiary)
-                TextField("Search worker or reference...", text: $searchText)
+                TextField("Search worker...", text: $searchText)
                     .font(AppTheme.Typography.body)
 
                 if !searchText.isEmpty {
@@ -49,21 +48,6 @@ struct TransactionFilterBar: View {
                             }
                         }
                     }
-
-                    Divider()
-                        .frame(height: 20)
-
-                    ForEach(TransactionStatus.allCases) { status in
-                        FilterChip(
-                            title: status.rawValue,
-                            isSelected: selectedStatus == status,
-                            color: status.color
-                        ) {
-                            withAnimation(AppTheme.Animation.quick) {
-                                selectedStatus = selectedStatus == status ? nil : status
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -94,12 +78,10 @@ struct FilterChip: View {
 struct TransactionFilterBar_Previews: PreviewProvider {
     struct Preview: View {
         @State private var source: PaymentSource?
-        @State private var status: TransactionStatus?
         @State private var search = ""
         var body: some View {
             TransactionFilterBar(
                 selectedSource: $source,
-                selectedStatus: $status,
                 searchText: $search
             )
             .padding()

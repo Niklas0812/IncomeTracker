@@ -55,4 +55,22 @@ extension Date {
     var memberSinceString: String {
         "Member since \(formatted(.dateTime.month(.abbreviated).year()))"
     }
+
+    /// Parse ISO 8601 date strings from the backend API
+    /// Handles formats: "2026-02-09T02:43:16.526577", "2026-02-09T14:30:00Z", etc.
+    static func fromAPIString(_ str: String) -> Date? {
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = iso.date(from: str) { return d }
+        iso.formatOptions = [.withInternetDateTime]
+        if let d = iso.date(from: str) { return d }
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+        df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+        if let d = df.date(from: str) { return d }
+        df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        if let d = df.date(from: str) { return d }
+        df.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return df.date(from: str)
+    }
 }

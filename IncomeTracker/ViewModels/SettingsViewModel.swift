@@ -10,9 +10,6 @@ final class SettingsViewModel: ObservableObject {
     @Published var serverURL: String {
         didSet { APIClient.shared.baseURL = serverURL }
     }
-    @Published var apiToken: String {
-        didSet { APIClient.shared.apiToken = apiToken }
-    }
     @Published var isServerReachable: Bool = false
     @Published var isCheckingServer: Bool = false
 
@@ -20,7 +17,6 @@ final class SettingsViewModel: ObservableObject {
 
     init() {
         self.serverURL = APIClient.shared.baseURL
-        self.apiToken = APIClient.shared.apiToken
         self.appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         checkServerHealth()
     }

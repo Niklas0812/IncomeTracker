@@ -5,7 +5,6 @@ final class TransactionsViewModel: ObservableObject {
 
     @Published var selectedPeriod: TimePeriod = .monthly
     @Published var selectedSource: PaymentSource? = nil
-    @Published var selectedStatus: TransactionStatus? = nil
     @Published var searchText: String = ""
     @Published var isLoading = false
     @Published var error: String?
@@ -18,6 +17,7 @@ final class TransactionsViewModel: ObservableObject {
 
     private let client = APIClient.shared
     private var searchDebounce: AnyCancellable?
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         searchDebounce = $searchText
@@ -29,7 +29,7 @@ final class TransactionsViewModel: ObservableObject {
             }
 
         // Refetch when filters change
-        Publishers.CombineLatest3($selectedPeriod, $selectedSource, $selectedStatus)
+        Publishers.CombineLatest($selectedPeriod, $selectedSource)
             .dropFirst()
             .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
             .sink { [weak self] _ in
@@ -40,8 +40,6 @@ final class TransactionsViewModel: ObservableObject {
 
         fetchData()
     }
-
-    private var cancellables = Set<AnyCancellable>()
 
     var filteredCount: Int { totalCount }
 
@@ -65,7 +63,7 @@ final class TransactionsViewModel: ObservableObject {
                     .transactions(
                         period: selectedPeriod.rawValue,
                         source: selectedSource?.apiValue,
-                        status: selectedStatus?.apiValue,
+                        status: nil,
                         search: searchText.isEmpty ? nil : searchText,
                         page: page
                     )
@@ -98,7 +96,6 @@ final class TransactionsViewModel: ObservableObject {
 
     func clearFilters() {
         selectedSource = nil
-        selectedStatus = nil
         searchText = ""
     }
 }

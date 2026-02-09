@@ -47,10 +47,11 @@ struct WorkerDetailView: View {
                 .presentationDragIndicator(.visible)
         }
         .onAppear {
-            viewModel.fetchWorkerDetail(worker) { _ in }
+            viewModel.fetchWorkerDetail(worker, period: selectedPeriod) { _ in }
             fetchPaymentBreakdown()
         }
         .onChange(of: selectedPeriod) { _ in
+            viewModel.fetchWorkerDetail(worker, period: selectedPeriod) { _ in }
             fetchPaymentBreakdown()
         }
     }

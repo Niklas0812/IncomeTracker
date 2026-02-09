@@ -11,11 +11,15 @@ final class DashboardViewModel: ObservableObject {
     @Published var totalIncome: Decimal = 0
     @Published var paysafeIncome: Decimal = 0
     @Published var paypalIncome: Decimal = 0
-    @Published var paysafePercentChange: Double?
-    @Published var paypalPercentChange: Double?
+    @Published var paysafeChange: PercentChangeValue = .none
+    @Published var paypalChange: PercentChangeValue = .none
     @Published var chartDataPoints: [ChartDataPoint] = []
     @Published var recentTransactions: [Transaction] = []
     @Published var topWorkers: [Worker] = []
+    @Published var paysafeSparkline: [Double] = []
+    @Published var paypalSparkline: [Double] = []
+    @Published var paysafeStatus: String = "active"
+    @Published var paypalStatus: String = "active"
 
     private let client = APIClient.shared
     private let cache = CacheService.shared
@@ -38,8 +42,8 @@ final class DashboardViewModel: ObservableObject {
                     self.totalIncome = Decimal(response.totalIncome)
                     self.paysafeIncome = Decimal(response.paysafeIncome)
                     self.paypalIncome = Decimal(response.paypalIncome)
-                    self.paysafePercentChange = response.paysafeChange
-                    self.paypalPercentChange = response.paypalChange
+                    self.paysafeChange = response.paysafeChange
+                    self.paypalChange = response.paypalChange
 
                     self.chartDataPoints = response.chartData.map { dto in
                         ChartDataPoint(
@@ -60,6 +64,11 @@ final class DashboardViewModel: ObservableObject {
                         )
                     }
 
+                    self.paysafeSparkline = response.paysafeSparkline
+                    self.paypalSparkline = response.paypalSparkline
+                    self.paysafeStatus = response.paysafeStatus
+                    self.paypalStatus = response.paypalStatus
+
                     self.isLoading = false
                     self.cache.save(response, forKey: "dashboard_\(self.selectedPeriod.rawValue)")
                 }
@@ -77,8 +86,8 @@ final class DashboardViewModel: ObservableObject {
         totalIncome = Decimal(cached.totalIncome)
         paysafeIncome = Decimal(cached.paysafeIncome)
         paypalIncome = Decimal(cached.paypalIncome)
-        paysafePercentChange = cached.paysafeChange
-        paypalPercentChange = cached.paypalChange
+        paysafeChange = cached.paysafeChange
+        paypalChange = cached.paypalChange
         chartDataPoints = cached.chartData.map { dto in
             ChartDataPoint(
                 label: dto.label,
@@ -91,12 +100,14 @@ final class DashboardViewModel: ObservableObject {
         topWorkers = cached.topWorkers.map { tw in
             Worker(id: tw.workerId, name: tw.workerName, totalEarnings: Decimal(tw.total))
         }
+        paysafeSparkline = cached.paysafeSparkline
+        paypalSparkline = cached.paypalSparkline
+        paysafeStatus = cached.paysafeStatus
+        paypalStatus = cached.paypalStatus
     }
 
     private static func parseDate(_ str: String) -> Date {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        return formatter.date(from: str) ?? Date()
+        Date.fromAPIString(str) ?? Date()
     }
 }
 

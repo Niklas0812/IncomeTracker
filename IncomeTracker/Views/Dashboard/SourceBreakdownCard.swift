@@ -4,18 +4,19 @@ import Charts
 struct SourceBreakdownCard: View {
     let source: PaymentSource
     let amount: Decimal
-    let percentChange: Double?
-    let transactions: [Transaction]
+    let changeValue: PercentChangeValue
+    let sparklineData: [Double]
+    let status: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             // Header
             HStack {
-                SourceBadge(source: source, style: .compact)
+                Text(source == .paysafe ? "PaySafe" : "PayPal")
+                    .font(AppTheme.Typography.captionBold)
+                    .foregroundStyle(source.color)
                 Spacer()
-                if let percentChange = percentChange {
-                    PercentChangeLabel(value: percentChange)
-                }
+                changeLabel
             }
 
             // Amount
@@ -24,8 +25,16 @@ struct SourceBreakdownCard: View {
                 .foregroundStyle(AppTheme.Colors.textPrimary)
 
             // Mini sparkline
-            sparklineChart
-                .frame(height: 40)
+            if status == "no_activity" {
+                Text("No activity")
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.Colors.textTertiary)
+                    .frame(height: 40)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+                sparklineChart
+                    .frame(height: 40)
+            }
         }
         .padding(AppTheme.Spacing.md)
         .cardStyle()
@@ -33,17 +42,31 @@ struct SourceBreakdownCard: View {
         .accessibilityLabel("\(source.rawValue) income, \(amount.eurFormatted)")
     }
 
-    private var sparklineChart: some View {
-        let dailyAmounts = Dictionary(grouping: transactions.filter { $0.paymentSource == source }) {
-            $0.date.dayKey
+    @ViewBuilder
+    private var changeLabel: some View {
+        switch changeValue {
+        case .number(let value):
+            PercentChangeLabel(value: value)
+        case .noActivity:
+            Text("No activity")
+                .font(AppTheme.Typography.caption)
+                .foregroundStyle(AppTheme.Colors.textTertiary)
+                .padding(.horizontal, AppTheme.Spacing.xs)
+                .padding(.vertical, 3)
+                .background(AppTheme.Colors.textTertiary.opacity(0.1))
+                .clipShape(Capsule())
+        case .none:
+            EmptyView()
         }
-        .map { (key: $0.key, amount: $0.value.reduce(0) { $0 + $1.amount }) }
-        .sorted { $0.key < $1.key }
+    }
 
-        return Chart(dailyAmounts, id: \.key) { item in
+    private var sparklineChart: some View {
+        let indexed = sparklineData.enumerated().map { (index: $0.offset, amount: $0.element) }
+
+        return Chart(indexed, id: \.index) { item in
             AreaMark(
-                x: .value("Date", item.key),
-                y: .value("Amount", item.amount.doubleValue)
+                x: .value("Day", item.index),
+                y: .value("Amount", item.amount)
             )
             .foregroundStyle(
                 LinearGradient(
@@ -55,8 +78,8 @@ struct SourceBreakdownCard: View {
             .interpolationMethod(.catmullRom)
 
             LineMark(
-                x: .value("Date", item.key),
-                y: .value("Amount", item.amount.doubleValue)
+                x: .value("Day", item.index),
+                y: .value("Amount", item.amount)
             )
             .foregroundStyle(source.color)
             .lineStyle(StrokeStyle(lineWidth: 2))
@@ -91,14 +114,16 @@ struct SourceBreakdownCard_Previews: PreviewProvider {
             SourceBreakdownCard(
                 source: .paysafe,
                 amount: 5000,
-                percentChange: 12.5,
-                transactions: []
+                changeValue: .number(12.5),
+                sparklineData: [10, 20, 15, 30, 25, 40, 35],
+                status: "active"
             )
             SourceBreakdownCard(
                 source: .paypal,
                 amount: 3000,
-                percentChange: -3.2,
-                transactions: []
+                changeValue: .noActivity,
+                sparklineData: [],
+                status: "no_activity"
             )
         }
         .padding()

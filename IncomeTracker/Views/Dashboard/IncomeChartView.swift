@@ -44,7 +44,7 @@ struct IncomeChartView: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 6)) { _ in
+                AxisMarks(values: .automatic(desiredCount: 5)) { _ in
                     AxisValueLabel()
                         .font(AppTheme.Typography.micro)
                         .foregroundStyle(AppTheme.Colors.textTertiary)

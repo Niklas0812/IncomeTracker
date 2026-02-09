@@ -21,7 +21,7 @@ struct SettingsView: View {
                             Text("Server URL")
                                 .font(AppTheme.Typography.callout)
                                 .foregroundStyle(AppTheme.Colors.textPrimary)
-                            TextField("https://your-server.com", text: $viewModel.serverURL)
+                            TextField("https://your-server.trycloudflare.com", text: $viewModel.serverURL)
                                 .font(AppTheme.Typography.caption)
                                 .foregroundStyle(AppTheme.Colors.textSecondary)
                                 .textContentType(.URL)
@@ -38,26 +38,6 @@ struct SettingsView: View {
                             Circle()
                                 .fill(viewModel.isServerReachable ? AppTheme.Colors.positive : AppTheme.Colors.negative)
                                 .frame(width: 10, height: 10)
-                        }
-                    }
-                    .listRowBackground(AppTheme.Colors.cardBackground)
-
-                    HStack(spacing: AppTheme.Spacing.sm) {
-                        Image(systemName: "key.fill")
-                            .font(.system(size: 16))
-                            .foregroundStyle(AppTheme.Colors.warning)
-                            .frame(width: 28, height: 28)
-                            .background(AppTheme.Colors.warning.opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("API Token")
-                                .font(AppTheme.Typography.callout)
-                                .foregroundStyle(AppTheme.Colors.textPrimary)
-                            SecureField("Bearer token", text: $viewModel.apiToken)
-                                .font(AppTheme.Typography.caption)
-                                .autocapitalization(.none)
-                                .autocorrectionDisabled()
                         }
                     }
                     .listRowBackground(AppTheme.Colors.cardBackground)
@@ -101,20 +81,6 @@ struct SettingsView: View {
                         title: "Transaction Alerts",
                         subtitle: "Get notified for each transaction",
                         isOn: $viewModel.transactionAlerts
-                    )
-                    toggleRow(
-                        icon: "calendar.badge.clock",
-                        iconColor: AppTheme.Colors.paysafe,
-                        title: "Weekly Summary",
-                        subtitle: "Receive a weekly earnings report",
-                        isOn: $viewModel.weeklySummary
-                    )
-                    toggleRow(
-                        icon: "chart.bar.doc.horizontal.fill",
-                        iconColor: AppTheme.Colors.positive,
-                        title: "Monthly Report",
-                        subtitle: "Detailed monthly analytics email",
-                        isOn: $viewModel.monthlyReport
                     )
                 } header: {
                     sectionHeader("Notifications")

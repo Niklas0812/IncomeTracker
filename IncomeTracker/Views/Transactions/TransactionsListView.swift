@@ -12,7 +12,6 @@ struct TransactionsListView: View {
                     PeriodSelector(selected: $viewModel.selectedPeriod)
                     TransactionFilterBar(
                         selectedSource: $viewModel.selectedSource,
-                        selectedStatus: $viewModel.selectedStatus,
                         searchText: $viewModel.searchText
                     )
                 }
@@ -76,7 +75,6 @@ struct TransactionsListView: View {
                     .listStyle(.plain)
                     .refreshable { viewModel.fetchData() }
                     .animation(AppTheme.Animation.standard, value: viewModel.selectedSource)
-                    .animation(AppTheme.Animation.standard, value: viewModel.selectedStatus)
                 }
 
                 // Summary footer
