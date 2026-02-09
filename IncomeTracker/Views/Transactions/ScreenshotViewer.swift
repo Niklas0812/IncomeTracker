@@ -26,9 +26,9 @@ struct ScreenshotViewer: View {
                                 .frame(maxWidth: geo.size.width)
                                 .scaleEffect(scale)
                                 .gesture(
-                                    MagnifyGesture()
+                                    MagnificationGesture()
                                         .onChanged { value in
-                                            scale = value.magnification
+                                            scale = value
                                         }
                                         .onEnded { _ in
                                             withAnimation { scale = max(1, scale) }
