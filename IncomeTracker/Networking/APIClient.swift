@@ -3,7 +3,7 @@ import Foundation
 final class APIClient {
     static let shared = APIClient()
 
-    private static let defaultURL = "https://reggae-adjacent-campbell-miracle.trycloudflare.com"
+    private static let defaultURL = "https://bringing-items-tones-studied.trycloudflare.com"
     private static let hardcodedToken = "changeme"
 
     private let session: URLSession
