@@ -9,6 +9,12 @@ struct WorkerDetailView: View {
     @State private var showEditSheet = false
     @State private var paymentBreakdown: PaymentBreakdownResponse?
     @State private var selectedChartPoint: WorkerChartPoint?
+    @State private var isLoadingDetail = true
+
+    private var workerChartMaxY: Double {
+        let maxVal = chartData.map { $0.amount.doubleValue }.max() ?? 0
+        return maxVal * 1.15
+    }
 
     private var periodEarnings: Decimal { viewModel.earnings(for: worker, in: selectedPeriod) }
     private var chartData: [WorkerChartPoint] { viewModel.chartData(for: worker, in: selectedPeriod) }
@@ -20,10 +26,27 @@ struct WorkerDetailView: View {
             VStack(spacing: AppTheme.Spacing.lg) {
                 headerCard
                 earningsSummary
-                earningsChart
-                paymentBreakdownSection
-                statsGrid
-                transactionHistory
+                if isLoadingDetail && chartData.isEmpty {
+                    VStack(spacing: AppTheme.Spacing.md) {
+                        RoundedRectangle(cornerRadius: AppTheme.Radius.medium)
+                            .fill(AppTheme.Colors.textTertiary.opacity(0.1))
+                            .frame(height: 180)
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.medium)
+                                .fill(AppTheme.Colors.textTertiary.opacity(0.1))
+                                .frame(height: 80)
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.medium)
+                                .fill(AppTheme.Colors.textTertiary.opacity(0.1))
+                                .frame(height: 80)
+                        }
+                    }
+                    .padding(.horizontal, AppTheme.Spacing.xs)
+                } else {
+                    earningsChart
+                    paymentBreakdownSection
+                    statsGrid
+                    transactionHistory
+                }
             }
             .padding(.horizontal, AppTheme.Spacing.md)
             .padding(.bottom, AppTheme.Spacing.xxl)
@@ -47,12 +70,11 @@ struct WorkerDetailView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
-        .onAppear {
-            viewModel.fetchWorkerDetail(worker, period: selectedPeriod) { _ in }
-            fetchPaymentBreakdown()
-        }
-        .onChange(of: selectedPeriod) { _ in
-            viewModel.fetchWorkerDetail(worker, period: selectedPeriod) { _ in }
+        .task(id: selectedPeriod) {
+            isLoadingDetail = true
+            viewModel.fetchWorkerDetail(worker, period: selectedPeriod) { _ in
+                isLoadingDetail = false
+            }
             fetchPaymentBreakdown()
         }
     }
@@ -118,7 +140,7 @@ struct WorkerDetailView: View {
                 Text(periodEarnings.eurFormatted)
                     .font(AppTheme.Typography.heroNumber)
                     .foregroundStyle(AppTheme.Colors.textPrimary)
-                    .animation(AppTheme.Animation.spring, value: selectedPeriod)
+                    .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
             }
         }
     }
@@ -221,10 +243,11 @@ struct WorkerDetailView: View {
                     )
             }
         }
+        .chartYScale(domain: 0...max(workerChartMaxY, 1))
         .frame(height: 180)
         .padding(AppTheme.Spacing.md)
         .cardStyle()
-        .animation(AppTheme.Animation.spring, value: selectedPeriod)
+        .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
     }
 
     // MARK: - Payment Breakdown
@@ -296,7 +319,7 @@ struct WorkerDetailView: View {
             )
             StatCard(
                 title: "Last Transaction",
-                value: stats.lastTransactionDate?.shortDateString ?? "N/A",
+                value: stats.lastTransactionDate.map { "\($0.shortDateString) \($0.timeString)" } ?? "N/A",
                 iconName: "calendar.circle.fill",
                 iconColor: .purple
             )

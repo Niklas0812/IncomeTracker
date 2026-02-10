@@ -29,7 +29,7 @@ struct TransactionRow: View {
                     .font(AppTheme.Typography.headline)
                     .foregroundStyle(transaction.status.color)
 
-                Text(transaction.date.shortDateString)
+                Text("\(transaction.date.shortDateString) \u{00B7} \(transaction.date.timeString)")
                     .font(AppTheme.Typography.caption)
                     .foregroundStyle(AppTheme.Colors.textTertiary)
             }

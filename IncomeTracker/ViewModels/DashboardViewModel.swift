@@ -114,7 +114,7 @@ final class DashboardViewModel: ObservableObject {
 // MARK: - Chart Data
 
 struct ChartDataPoint: Identifiable {
-    let id = UUID()
+    var id: String { "\(label)-\(date.timeIntervalSince1970)" }
     let label: String
     let date: Date
     let paysafeAmount: Decimal

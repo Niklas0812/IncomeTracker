@@ -82,7 +82,9 @@ final class APIClient {
     }
 
     func screenshotURL(filename: String) -> URL? {
-        URL(string: "\(baseURL)/api/screenshots/\(filename)")
+        var components = URLComponents(string: "\(baseURL)/api/screenshots/\(filename)")
+        components?.queryItems = [URLQueryItem(name: "token", value: apiToken)]
+        return components?.url
     }
 
     func checkHealth() async -> Bool {

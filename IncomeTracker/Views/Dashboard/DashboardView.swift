@@ -6,42 +6,40 @@ struct DashboardView: View {
     @State private var hasAppeared = false
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: AppTheme.Spacing.lg) {
-                    headerSection
-                    periodSelector
+        ScrollView {
+            VStack(spacing: AppTheme.Spacing.lg) {
+                headerSection
+                periodSelector
 
-                    if viewModel.isLoading && viewModel.totalIncome == 0 {
-                        loadingPlaceholder
-                    } else {
-                        heroIncome
-                        incomeChart
-                        sourceBreakdown
-                        recentTransactionsSection
-                        topWorkersSection
-                    }
-                }
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.bottom, AppTheme.Spacing.xxl)
-            }
-            .refreshable { viewModel.fetchData() }
-            .background(AppTheme.Colors.backgroundPrimary)
-            .navigationBarTitleDisplayMode(.inline)
-            .overlay(alignment: .top) {
-                if let error = viewModel.error {
-                    errorBanner(error)
+                if viewModel.isLoading && viewModel.totalIncome == 0 {
+                    loadingPlaceholder
+                } else {
+                    heroIncome
+                    incomeChart
+                    sourceBreakdown
+                    recentTransactionsSection
+                    topWorkersSection
                 }
             }
-            .onAppear {
-                if !hasAppeared {
-                    hasAppeared = true
-                    animateCountUp()
-                }
+            .padding(.horizontal, AppTheme.Spacing.md)
+            .padding(.bottom, AppTheme.Spacing.xxl)
+        }
+        .refreshable { viewModel.fetchData() }
+        .background(AppTheme.Colors.backgroundPrimary)
+        .navigationBarTitleDisplayMode(.inline)
+        .overlay(alignment: .top) {
+            if let error = viewModel.error {
+                errorBanner(error)
             }
-            .onChange(of: viewModel.totalIncome) { _ in
+        }
+        .onAppear {
+            if !hasAppeared {
+                hasAppeared = true
                 animateCountUp()
             }
+        }
+        .onChange(of: viewModel.totalIncome) { _ in
+            animateCountUp()
         }
     }
 

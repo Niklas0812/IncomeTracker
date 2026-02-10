@@ -23,7 +23,7 @@ struct StatCard: View {
             Text(value)
                 .font(AppTheme.Typography.title3)
                 .foregroundStyle(AppTheme.Colors.textPrimary)
-                .lineLimit(1)
+                .lineLimit(2)
                 .minimumScaleFactor(0.7)
 
             if let subtitle = subtitle {

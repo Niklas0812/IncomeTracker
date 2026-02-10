@@ -27,9 +27,11 @@ extension Date {
         formatted(.dateTime.day().month(.abbreviated))
     }
 
-    /// e.g. "14:32"
+    /// e.g. "14:32" in 24-hour format
     var timeString: String {
-        formatted(.dateTime.hour(.twoDigits(amPM: .abbreviated)).minute())
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: self)
     }
 
     /// Section header: "Today", "Yesterday", or "Mon, 14 Jan 2025"

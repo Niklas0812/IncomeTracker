@@ -198,7 +198,7 @@ final class WorkersViewModel: ObservableObject {
 }
 
 struct WorkerChartPoint: Identifiable {
-    let id = UUID()
+    var id: String { "\(label)-\(date.timeIntervalSince1970)" }
     let date: Date
     let label: String
     let amount: Decimal

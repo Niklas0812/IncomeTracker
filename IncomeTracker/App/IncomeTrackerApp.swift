@@ -33,14 +33,25 @@ struct IncomeTrackerApp: App {
 
 struct ContentView: View {
     @State private var selectedTab = 0
+    @State private var dashboardPath = NavigationPath()
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            DashboardView()
-                .tabItem {
-                    Label("Dashboard", systemImage: "house.fill")
+        TabView(selection: Binding(
+            get: { selectedTab },
+            set: { newTab in
+                if newTab == selectedTab && newTab == 0 {
+                    dashboardPath = NavigationPath()
                 }
-                .tag(0)
+                selectedTab = newTab
+            }
+        )) {
+            NavigationStack(path: $dashboardPath) {
+                DashboardView()
+            }
+            .tabItem {
+                Label("Dashboard", systemImage: "house.fill")
+            }
+            .tag(0)
 
             TransactionsListView()
                 .tabItem {
@@ -61,6 +72,9 @@ struct ContentView: View {
                 .tag(3)
         }
         .tint(AppTheme.Colors.primaryFallback)
+        .onChange(of: selectedTab) { _ in
+            dashboardPath = NavigationPath()
+        }
     }
 }
 

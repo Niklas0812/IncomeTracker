@@ -7,6 +7,11 @@ struct IncomeChartView: View {
 
     @State private var selectedPoint: ChartDataPoint?
 
+    private var maxY: Double {
+        let maxVal = dataPoints.map { ($0.paysafeAmount + $0.paypalAmount).doubleValue }.max() ?? 0
+        return maxVal * 1.15
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             // Legend
@@ -85,9 +90,10 @@ struct IncomeChartView: View {
                         )
                 }
             }
+            .chartYScale(domain: 0...max(maxY, 1))
             .frame(height: 200)
             .padding(.horizontal, AppTheme.Spacing.xs)
-            .animation(AppTheme.Animation.spring, value: dataPoints.map(\.id))
+            .animation(.easeInOut(duration: 0.3), value: period)
         }
         .padding(AppTheme.Spacing.md)
         .cardStyle()

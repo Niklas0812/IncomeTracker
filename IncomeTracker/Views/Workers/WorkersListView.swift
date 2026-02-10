@@ -76,7 +76,6 @@ struct WorkersListView: View {
                     }
                     .listStyle(.plain)
                     .refreshable { viewModel.fetchWorkers() }
-                    .animation(AppTheme.Animation.standard, value: viewModel.sortOption)
                 }
             }
             .background(AppTheme.Colors.backgroundPrimary)
@@ -93,7 +92,9 @@ struct WorkersListView: View {
                         Menu("Sort by") {
                             ForEach(WorkerSortOption.allCases) { option in
                                 Button {
-                                    viewModel.sortOption = option
+                                    withAnimation(AppTheme.Animation.standard) {
+                                        viewModel.sortOption = option
+                                    }
                                 } label: {
                                     HStack {
                                         Text(option.rawValue)
