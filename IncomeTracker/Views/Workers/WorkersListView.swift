@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct WorkersListView: View {
+    @Binding var navigateToWorkerId: Int?
     @StateObject private var viewModel = WorkersViewModel()
     @State private var showAddSheet = false
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             VStack(spacing: 0) {
                 // Filter bar
                 VStack(spacing: AppTheme.Spacing.sm) {
@@ -54,9 +56,7 @@ struct WorkersListView: View {
                 } else {
                     List {
                         ForEach(viewModel.filteredWorkers) { worker in
-                            NavigationLink {
-                                WorkerDetailView(worker: worker, viewModel: viewModel)
-                            } label: {
+                            NavigationLink(value: worker.id) {
                                 workerRow(worker)
                             }
                             .listRowInsets(EdgeInsets(
@@ -73,7 +73,6 @@ struct WorkersListView: View {
                                 }
                             }
                         }
-                        .animation(.easeInOut(duration: 0.3), value: viewModel.sortOption)
                     }
                     .listStyle(.plain)
                     .refreshable { viewModel.fetchWorkers() }
@@ -81,6 +80,11 @@ struct WorkersListView: View {
             }
             .background(AppTheme.Colors.backgroundPrimary)
             .navigationTitle("Workers")
+            .navigationDestination(for: Int.self) { workerId in
+                if let worker = viewModel.workers.first(where: { $0.id == workerId }) {
+                    WorkerDetailView(worker: worker, viewModel: viewModel)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -114,6 +118,15 @@ struct WorkersListView: View {
                 AddWorkerSheet(viewModel: viewModel)
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
+            }
+            .onChange(of: navigateToWorkerId) { workerId in
+                if let workerId {
+                    path = NavigationPath()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        path.append(workerId)
+                        navigateToWorkerId = nil
+                    }
+                }
             }
         }
     }
@@ -166,6 +179,6 @@ struct WorkersListView: View {
 
 struct WorkersListView_Previews: PreviewProvider {
     static var previews: some View {
-        WorkersListView()
+        WorkersListView(navigateToWorkerId: .constant(nil))
     }
 }

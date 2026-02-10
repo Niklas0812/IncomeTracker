@@ -34,6 +34,7 @@ struct IncomeTrackerApp: App {
 struct ContentView: View {
     @State private var selectedTab = 0
     @State private var dashboardPath = NavigationPath()
+    @State private var navigateToWorkerId: Int?
 
     var body: some View {
         TabView(selection: Binding(
@@ -46,7 +47,7 @@ struct ContentView: View {
             }
         )) {
             NavigationStack(path: $dashboardPath) {
-                DashboardView(selectedTab: $selectedTab)
+                DashboardView(selectedTab: $selectedTab, navigateToWorkerId: $navigateToWorkerId)
             }
             .tabItem {
                 Label("Dashboard", systemImage: "house.fill")
@@ -59,7 +60,7 @@ struct ContentView: View {
                 }
                 .tag(1)
 
-            WorkersListView()
+            WorkersListView(navigateToWorkerId: $navigateToWorkerId)
                 .tabItem {
                     Label("Workers", systemImage: "person.2.fill")
                 }

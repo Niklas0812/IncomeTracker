@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @Binding var selectedTab: Int
+    @Binding var navigateToWorkerId: Int?
     @StateObject private var viewModel = DashboardViewModel()
     @State private var animatedTotal: Decimal = 0
     @State private var hasAppeared = false
@@ -170,8 +171,13 @@ struct DashboardView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AppTheme.Spacing.sm) {
                     ForEach(viewModel.topWorkers) { worker in
-                        WorkerCard(worker: worker)
-                            .transition(.scale.combined(with: .opacity))
+                        Button {
+                            navigateToWorkerId = worker.id
+                            selectedTab = 2
+                        } label: {
+                            WorkerCard(worker: worker)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -222,6 +228,6 @@ struct DashboardView: View {
 
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        DashboardView(selectedTab: .constant(0))
+        DashboardView(selectedTab: .constant(0), navigateToWorkerId: .constant(nil))
     }
 }
