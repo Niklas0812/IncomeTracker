@@ -11,6 +11,7 @@ final class WorkersViewModel: ObservableObject {
     @Published var workers: [Worker] = []
     @Published var workerTransactions: [Int: [Transaction]] = [:]
     @Published var workerEarnings: [Int: Decimal] = [:]
+    @Published var workerChartData: [Int: [WorkerChartPoint]] = [:]
     @Published var availableWorkers: [AvailableWorkerDTO] = []
 
     private let client = APIClient.shared
@@ -68,6 +69,16 @@ final class WorkersViewModel: ObservableObject {
             let txns = response.recentTransactions.map { Transaction(from: $0) }
             self.workerTransactions[worker.id] = txns
             self.workerEarnings[worker.id] = Decimal(response.worker.totalEarnings)
+
+            if let chartDTOs = response.chartData {
+                self.workerChartData[worker.id] = chartDTOs.map { dto in
+                    WorkerChartPoint(
+                        date: Date.fromAPIString(dto.date) ?? .now,
+                        label: dto.label,
+                        amount: Decimal(dto.amount)
+                    )
+                }
+            }
         }
         return response
     }
@@ -94,67 +105,7 @@ final class WorkersViewModel: ObservableObject {
     }
 
     func chartData(for worker: Worker, in period: TimePeriod) -> [WorkerChartPoint] {
-        let start = period.startDate
-        let now = Date.now
-        let txns = transactions(for: worker)
-            .filter { $0.date >= start && $0.status == .completed }
-
-        let calendar = Calendar.current
-
-        // Determine grouping components and step unit
-        let components: Set<Calendar.Component>
-        let stepUnit: Calendar.Component
-        switch period {
-        case .daily:
-            components = [.year, .month, .day, .hour]
-            stepUnit = .hour
-        case .weekly:
-            components = [.year, .month, .day]
-            stepUnit = .day
-        case .monthly:
-            components = [.year, .month, .day]
-            stepUnit = .day
-        case .threeMonths:
-            components = [.yearForWeekOfYear, .weekOfYear]
-            stepUnit = .weekOfYear
-        case .sixMonths:
-            components = [.yearForWeekOfYear, .weekOfYear]
-            stepUnit = .weekOfYear
-        case .oneYear:
-            components = [.year, .month]
-            stepUnit = .month
-        }
-
-        // Group transactions by their bucket
-        let txnGrouped = Dictionary(grouping: txns) {
-            calendar.dateComponents(components, from: $0.date)
-        }
-
-        // Generate all time buckets for the full period
-        var buckets: [WorkerChartPoint] = []
-        var cursor = start
-        while cursor <= now {
-            let comps = calendar.dateComponents(components, from: cursor)
-            let amount = txnGrouped[comps]?.reduce(0) { $0 + $1.amount } ?? 0
-            let bucketDate = calendar.date(from: comps) ?? cursor
-            let label: String
-            switch period {
-            case .daily:
-                label = bucketDate.formatted(.dateTime.hour())
-            case .weekly:
-                label = bucketDate.formatted(.dateTime.weekday(.abbreviated))
-            case .monthly:
-                label = bucketDate.formatted(.dateTime.day().month(.abbreviated))
-            case .threeMonths, .sixMonths:
-                label = bucketDate.formatted(.dateTime.day().month(.abbreviated))
-            case .oneYear:
-                label = bucketDate.formatted(.dateTime.month(.abbreviated))
-            }
-            buckets.append(WorkerChartPoint(date: bucketDate, label: label, amount: amount))
-            cursor = calendar.date(byAdding: stepUnit, value: 1, to: cursor) ?? now.addingTimeInterval(1)
-        }
-
-        return buckets
+        workerChartData[worker.id] ?? []
     }
 
     func stats(for worker: Worker) -> WorkerStats {

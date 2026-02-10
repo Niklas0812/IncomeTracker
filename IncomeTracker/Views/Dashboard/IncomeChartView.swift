@@ -103,9 +103,10 @@ struct IncomeChartView: View {
             }
             .chartYScale(domain: 0...max(maxY, 1))
             .chartXScale(domain: xDomain)
+            .chartPlotStyle { plot in
+                plot.padding(.trailing, 40)
+            }
             .frame(height: 200)
-            .padding(.leading, AppTheme.Spacing.xs)
-            .padding(.trailing, 28)
         }
         .padding(AppTheme.Spacing.md)
         .cardStyle()

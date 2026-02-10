@@ -86,6 +86,18 @@ struct SettingsView: View {
                     sectionHeader("Notifications")
                 }
 
+                // Payment
+                Section {
+                    NavigationLink {
+                        BonusTiersView()
+                    } label: {
+                        aboutRow(icon: "dollarsign.circle.fill", title: "Bonus Tiers", detail: nil)
+                    }
+                    .listRowBackground(AppTheme.Colors.cardBackground)
+                } header: {
+                    sectionHeader("Payment")
+                }
+
                 // Analytics
                 Section {
                     NavigationLink {

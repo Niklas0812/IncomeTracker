@@ -46,6 +46,12 @@ struct WorkerDetailView: View {
             .padding(.horizontal, AppTheme.Spacing.md)
             .padding(.bottom, AppTheme.Spacing.xxl)
         }
+        .refreshable {
+            do {
+                let _ = try await viewModel.fetchWorkerDetail(worker, period: selectedPeriod)
+            } catch {}
+            await fetchPaymentBreakdown()
+        }
         .background(AppTheme.Colors.backgroundPrimary)
         .navigationTitle(worker.name)
         .navigationBarTitleDisplayMode(.inline)

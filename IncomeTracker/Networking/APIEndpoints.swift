@@ -19,6 +19,8 @@ enum APIEndpoint {
     case telegramSendCode
     case telegramVerify
     case telegramAnalyze
+    case bonusTiers
+    case updateBonusTiers
     case breaks(userId: Int?)
 
     var path: String {
@@ -53,6 +55,8 @@ enum APIEndpoint {
             return "/api/telegram/verify"
         case .telegramAnalyze:
             return "/api/telegram/analyze"
+        case .bonusTiers, .updateBonusTiers:
+            return "/api/bonus-tiers"
         case .breaks:
             return "/api/breaks"
         }
@@ -90,7 +94,7 @@ enum APIEndpoint {
         switch self {
         case .createWorker, .telegramRegister, .telegramSendCode, .telegramVerify, .telegramAnalyze:
             return "POST"
-        case .updateWorker:
+        case .updateWorker, .updateBonusTiers:
             return "PUT"
         case .deleteWorker:
             return "DELETE"

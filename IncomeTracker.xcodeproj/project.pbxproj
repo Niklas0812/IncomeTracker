@@ -51,6 +51,7 @@
 		A10001010000000000000043 /* TelegramResponseTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000045 /* TelegramResponseTimeView.swift */; };
 
 		A10001010000000000000045 /* WorkerEarningsChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000047 /* WorkerEarningsChartView.swift */; };
+		A10001010000000000000046 /* BonusTiersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000048 /* BonusTiersView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -100,6 +101,7 @@
 		A20001010000000000000045 /* TelegramResponseTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramResponseTimeView.swift; sourceTree = "<group>"; };
 
 		A20001010000000000000047 /* WorkerEarningsChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerEarningsChartView.swift; sourceTree = "<group>"; };
+		A20001010000000000000048 /* BonusTiersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonusTiersView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -263,6 +265,7 @@
 			children = (
 				A20001010000000000000020 /* SettingsView.swift */,
 				A20001010000000000000045 /* TelegramResponseTimeView.swift */,
+				A20001010000000000000048 /* BonusTiersView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -404,6 +407,7 @@
 				A10001010000000000000042 /* EditWorkerSheet.swift in Sources */,
 				A10001010000000000000043 /* TelegramResponseTimeView.swift in Sources */,
 				A10001010000000000000045 /* WorkerEarningsChartView.swift in Sources */,
+				A10001010000000000000046 /* BonusTiersView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -551,7 +555,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.6;
+				MARKETING_VERSION = 1.1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.incometracker.app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -582,7 +586,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.6;
+				MARKETING_VERSION = 1.1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.incometracker.app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

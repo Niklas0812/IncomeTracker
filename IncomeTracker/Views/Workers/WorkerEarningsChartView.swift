@@ -122,11 +122,11 @@ struct WorkerEarningsChartView: View {
         }
         .chartYScale(domain: 0...max(maxY, 1))
         .chartXScale(domain: xDomain)
+        .chartPlotStyle { plot in
+            plot.padding(.trailing, 40)
+        }
         .frame(height: 180)
-        .padding(.top, AppTheme.Spacing.md)
-        .padding(.bottom, AppTheme.Spacing.md)
-        .padding(.leading, AppTheme.Spacing.md)
-        .padding(.trailing, 28)
+        .padding(AppTheme.Spacing.md)
         .cardStyle()
     }
 }

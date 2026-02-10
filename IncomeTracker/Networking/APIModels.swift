@@ -177,13 +177,21 @@ struct WorkerDTO: Codable {
 struct WorkerDetailResponse: Codable {
     let worker: WorkerDetailDTO
     let recentTransactions: [TransactionDTO]
+    let chartData: [WorkerChartDataDTO]?
     let period: String?
 
     enum CodingKeys: String, CodingKey {
         case worker
         case recentTransactions = "recent_transactions"
+        case chartData = "chart_data"
         case period
     }
+}
+
+struct WorkerChartDataDTO: Codable {
+    let date: String
+    let label: String
+    let amount: Double
 }
 
 struct WorkerDetailDTO: Codable {
@@ -326,4 +334,17 @@ struct TelegramAnalysisResultDTO: Codable, Identifiable {
         case responsesOver10minPercent = "responses_over_10min_percent"
         case error
     }
+}
+
+// MARK: - Bonus Tiers
+
+struct BonusTiersResponse: Codable {
+    let tiers: [BonusTierDTO]
+}
+
+struct BonusTierDTO: Codable, Identifiable {
+    let threshold: Int
+    let bonus: Double
+
+    var id: Int { threshold }
 }
