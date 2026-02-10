@@ -59,22 +59,17 @@ final class WorkersViewModel: ObservableObject {
         }
     }
 
-    func fetchWorkerDetail(_ worker: Worker, period: TimePeriod = .monthly, completion: @escaping (WorkerDetailResponse?) -> Void) {
-        Task {
-            do {
-                let response: WorkerDetailResponse = try await client.request(
-                    .workerDetail(userId: worker.id, period: period.rawValue)
-                )
-                await MainActor.run {
-                    let txns = response.recentTransactions.map { Transaction(from: $0) }
-                    self.workerTransactions[worker.id] = txns
-                    self.workerEarnings[worker.id] = Decimal(response.worker.totalEarnings)
-                    completion(response)
-                }
-            } catch {
-                await MainActor.run { completion(nil) }
-            }
+    @MainActor
+    func fetchWorkerDetail(_ worker: Worker, period: TimePeriod = .monthly) async throws -> WorkerDetailResponse {
+        let response: WorkerDetailResponse = try await client.request(
+            .workerDetail(userId: worker.id, period: period.rawValue)
+        )
+        withAnimation(.easeInOut(duration: 0.3)) {
+            let txns = response.recentTransactions.map { Transaction(from: $0) }
+            self.workerTransactions[worker.id] = txns
+            self.workerEarnings[worker.id] = Decimal(response.worker.totalEarnings)
         }
+        return response
     }
 
     func fetchAvailableWorkers() {

@@ -16,6 +16,17 @@ struct WorkerDetailView: View {
         return maxVal * 1.15
     }
 
+    private var workerXDomain: ClosedRange<Date> {
+        guard let minDate = chartData.map(\.date).min(),
+              let maxDate = chartData.map(\.date).max() else {
+            return Date()...Date()
+        }
+        let calendar = Calendar.current
+        let paddedMin = calendar.date(byAdding: workerChartUnit, value: -1, to: minDate) ?? minDate
+        let paddedMax = calendar.date(byAdding: workerChartUnit, value: 1, to: maxDate) ?? maxDate
+        return paddedMin...paddedMax
+    }
+
     private var periodEarnings: Decimal { viewModel.earnings(for: worker, in: selectedPeriod) }
     private var chartData: [WorkerChartPoint] { viewModel.chartData(for: worker, in: selectedPeriod) }
     private var stats: WorkerStats { viewModel.stats(for: worker) }
@@ -72,10 +83,11 @@ struct WorkerDetailView: View {
         }
         .task(id: selectedPeriod) {
             isLoadingDetail = true
-            viewModel.fetchWorkerDetail(worker, period: selectedPeriod) { _ in
-                isLoadingDetail = false
-            }
-            fetchPaymentBreakdown()
+            do {
+                let _ = try await viewModel.fetchWorkerDetail(worker, period: selectedPeriod)
+            } catch {}
+            await fetchPaymentBreakdown()
+            isLoadingDetail = false
         }
     }
 
@@ -140,7 +152,6 @@ struct WorkerDetailView: View {
                 Text(periodEarnings.eurFormatted)
                     .font(AppTheme.Typography.heroNumber)
                     .foregroundStyle(AppTheme.Colors.textPrimary)
-                    .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
             }
         }
     }
@@ -244,10 +255,10 @@ struct WorkerDetailView: View {
             }
         }
         .chartYScale(domain: 0...max(workerChartMaxY, 1))
+        .chartXScale(domain: workerXDomain)
         .frame(height: 180)
         .padding(AppTheme.Spacing.md)
         .cardStyle()
-        .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
     }
 
     // MARK: - Payment Breakdown
@@ -365,18 +376,14 @@ struct WorkerDetailView: View {
 
     // MARK: - Helpers
 
-    private func fetchPaymentBreakdown() {
-        Task {
-            do {
-                let response: PaymentBreakdownResponse = try await APIClient.shared.request(
-                    .workerPayment(userId: worker.id, period: selectedPeriod.rawValue)
-                )
-                await MainActor.run {
-                    self.paymentBreakdown = response
-                }
-            } catch {
-                // silently fail
-            }
+    private func fetchPaymentBreakdown() async {
+        do {
+            let response: PaymentBreakdownResponse = try await APIClient.shared.request(
+                .workerPayment(userId: worker.id, period: selectedPeriod.rawValue)
+            )
+            self.paymentBreakdown = response
+        } catch {
+            // silently fail
         }
     }
 }

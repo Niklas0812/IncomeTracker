@@ -39,36 +39,37 @@ final class DashboardViewModel: ObservableObject {
                     .dashboard(period: selectedPeriod.rawValue)
                 )
                 await MainActor.run {
-                    self.totalIncome = Decimal(response.totalIncome)
-                    self.paysafeIncome = Decimal(response.paysafeIncome)
-                    self.paypalIncome = Decimal(response.paypalIncome)
-                    self.paysafeChange = response.paysafeChange
-                    self.paypalChange = response.paypalChange
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        self.totalIncome = Decimal(response.totalIncome)
+                        self.paysafeIncome = Decimal(response.paysafeIncome)
+                        self.paypalIncome = Decimal(response.paypalIncome)
+                        self.paysafeChange = response.paysafeChange
+                        self.paypalChange = response.paypalChange
 
-                    self.chartDataPoints = response.chartData.map { dto in
-                        ChartDataPoint(
-                            label: dto.label,
-                            date: Self.parseDate(dto.date),
-                            paysafeAmount: Decimal(dto.paysafe),
-                            paypalAmount: Decimal(dto.paypal)
-                        )
+                        self.chartDataPoints = response.chartData.map { dto in
+                            ChartDataPoint(
+                                label: dto.label,
+                                date: Self.parseDate(dto.date),
+                                paysafeAmount: Decimal(dto.paysafe),
+                                paypalAmount: Decimal(dto.paypal)
+                            )
+                        }
+
+                        self.recentTransactions = response.recentTransactions.map { Transaction(from: $0) }
+
+                        self.topWorkers = response.topWorkers.map { tw in
+                            Worker(
+                                id: tw.workerId,
+                                name: tw.workerName,
+                                totalEarnings: Decimal(tw.total)
+                            )
+                        }
+
+                        self.paysafeSparkline = response.paysafeSparkline
+                        self.paypalSparkline = response.paypalSparkline
+                        self.paysafeStatus = response.paysafeStatus
+                        self.paypalStatus = response.paypalStatus
                     }
-
-                    self.recentTransactions = response.recentTransactions.map { Transaction(from: $0) }
-
-                    self.topWorkers = response.topWorkers.map { tw in
-                        Worker(
-                            id: tw.workerId,
-                            name: tw.workerName,
-                            totalEarnings: Decimal(tw.total)
-                        )
-                    }
-
-                    self.paysafeSparkline = response.paysafeSparkline
-                    self.paypalSparkline = response.paypalSparkline
-                    self.paysafeStatus = response.paysafeStatus
-                    self.paypalStatus = response.paypalStatus
-
                     self.isLoading = false
                     self.cache.save(response, forKey: "dashboard_\(self.selectedPeriod.rawValue)")
                 }

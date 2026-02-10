@@ -12,6 +12,17 @@ struct IncomeChartView: View {
         return maxVal * 1.15
     }
 
+    private var xDomain: ClosedRange<Date> {
+        guard let minDate = dataPoints.map(\.date).min(),
+              let maxDate = dataPoints.map(\.date).max() else {
+            return Date()...Date()
+        }
+        let calendar = Calendar.current
+        let paddedMin = calendar.date(byAdding: chartUnit, value: -1, to: minDate) ?? minDate
+        let paddedMax = calendar.date(byAdding: chartUnit, value: 1, to: maxDate) ?? maxDate
+        return paddedMin...paddedMax
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             // Legend
@@ -91,9 +102,9 @@ struct IncomeChartView: View {
                 }
             }
             .chartYScale(domain: 0...max(maxY, 1))
+            .chartXScale(domain: xDomain)
             .frame(height: 200)
             .padding(.horizontal, AppTheme.Spacing.xs)
-            .animation(.easeInOut(duration: 0.3), value: period)
         }
         .padding(AppTheme.Spacing.md)
         .cardStyle()

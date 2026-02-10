@@ -46,7 +46,7 @@ struct ContentView: View {
             }
         )) {
             NavigationStack(path: $dashboardPath) {
-                DashboardView()
+                DashboardView(selectedTab: $selectedTab)
             }
             .tabItem {
                 Label("Dashboard", systemImage: "house.fill")

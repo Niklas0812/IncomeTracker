@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DashboardView: View {
+    @Binding var selectedTab: Int
     @StateObject private var viewModel = DashboardViewModel()
     @State private var animatedTotal: Decimal = 0
     @State private var hasAppeared = false
@@ -122,8 +123,8 @@ struct DashboardView: View {
                     .font(AppTheme.Typography.title3)
                     .foregroundStyle(AppTheme.Colors.textPrimary)
                 Spacer()
-                NavigationLink {
-                    TransactionsListView()
+                Button {
+                    selectedTab = 1
                 } label: {
                     HStack(spacing: AppTheme.Spacing.xxs) {
                         Text("View All")
@@ -221,6 +222,6 @@ struct DashboardView: View {
 
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        DashboardView()
+        DashboardView(selectedTab: .constant(0))
     }
 }
