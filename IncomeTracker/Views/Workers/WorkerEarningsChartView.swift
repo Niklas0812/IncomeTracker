@@ -123,7 +123,10 @@ struct WorkerEarningsChartView: View {
         .chartYScale(domain: 0...max(maxY, 1))
         .chartXScale(domain: xDomain)
         .frame(height: 180)
-        .padding(AppTheme.Spacing.md)
+        .padding(.top, AppTheme.Spacing.md)
+        .padding(.bottom, AppTheme.Spacing.md)
+        .padding(.leading, AppTheme.Spacing.md)
+        .padding(.trailing, 28)
         .cardStyle()
     }
 }

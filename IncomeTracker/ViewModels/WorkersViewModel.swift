@@ -95,48 +95,66 @@ final class WorkersViewModel: ObservableObject {
 
     func chartData(for worker: Worker, in period: TimePeriod) -> [WorkerChartPoint] {
         let start = period.startDate
+        let now = Date.now
         let txns = transactions(for: worker)
             .filter { $0.date >= start && $0.status == .completed }
 
         let calendar = Calendar.current
+
+        // Determine grouping components and step unit
         let components: Set<Calendar.Component>
+        let stepUnit: Calendar.Component
         switch period {
         case .daily:
             components = [.year, .month, .day, .hour]
-        case .weekly, .monthly:
+            stepUnit = .hour
+        case .weekly:
             components = [.year, .month, .day]
-        case .threeMonths, .sixMonths:
+            stepUnit = .day
+        case .monthly:
+            components = [.year, .month, .day]
+            stepUnit = .day
+        case .threeMonths:
             components = [.yearForWeekOfYear, .weekOfYear]
+            stepUnit = .weekOfYear
+        case .sixMonths:
+            components = [.yearForWeekOfYear, .weekOfYear]
+            stepUnit = .weekOfYear
         case .oneYear:
             components = [.year, .month]
+            stepUnit = .month
         }
 
-        let grouped = Dictionary(grouping: txns) {
+        // Group transactions by their bucket
+        let txnGrouped = Dictionary(grouping: txns) {
             calendar.dateComponents(components, from: $0.date)
         }
 
-        return grouped.map { comps, transactions in
-            let date = calendar.date(from: comps) ?? transactions.first?.date ?? .now
+        // Generate all time buckets for the full period
+        var buckets: [WorkerChartPoint] = []
+        var cursor = start
+        while cursor <= now {
+            let comps = calendar.dateComponents(components, from: cursor)
+            let amount = txnGrouped[comps]?.reduce(0) { $0 + $1.amount } ?? 0
+            let bucketDate = calendar.date(from: comps) ?? cursor
             let label: String
             switch period {
             case .daily:
-                label = date.formatted(.dateTime.hour().minute())
+                label = bucketDate.formatted(.dateTime.hour())
             case .weekly:
-                label = date.formatted(.dateTime.weekday(.abbreviated))
+                label = bucketDate.formatted(.dateTime.weekday(.abbreviated))
             case .monthly:
-                label = date.formatted(.dateTime.day().month(.abbreviated))
+                label = bucketDate.formatted(.dateTime.day().month(.abbreviated))
             case .threeMonths, .sixMonths:
-                label = date.formatted(.dateTime.day().month(.abbreviated))
+                label = bucketDate.formatted(.dateTime.day().month(.abbreviated))
             case .oneYear:
-                label = date.formatted(.dateTime.month(.abbreviated))
+                label = bucketDate.formatted(.dateTime.month(.abbreviated))
             }
-            return WorkerChartPoint(
-                date: date,
-                label: label,
-                amount: transactions.reduce(0) { $0 + $1.amount }
-            )
+            buckets.append(WorkerChartPoint(date: bucketDate, label: label, amount: amount))
+            cursor = calendar.date(byAdding: stepUnit, value: 1, to: cursor) ?? now.addingTimeInterval(1)
         }
-        .sorted { $0.date < $1.date }
+
+        return buckets
     }
 
     func stats(for worker: Worker) -> WorkerStats {

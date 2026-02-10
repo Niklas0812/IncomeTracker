@@ -9,6 +9,7 @@ struct WorkerDetailView: View {
     @State private var showEditSheet = false
     @State private var paymentBreakdown: PaymentBreakdownResponse?
     @State private var isLoadingDetail = true
+    @State private var breakdownPeriod: String = "1D"
 
     private var periodEarnings: Decimal { viewModel.earnings(for: worker, in: selectedPeriod) }
     private var chartData: [WorkerChartPoint] { viewModel.chartData(for: worker, in: selectedPeriod) }
@@ -69,8 +70,10 @@ struct WorkerDetailView: View {
             do {
                 let _ = try await viewModel.fetchWorkerDetail(worker, period: selectedPeriod)
             } catch {}
-            await fetchPaymentBreakdown()
             isLoadingDetail = false
+        }
+        .task(id: breakdownPeriod) {
+            await fetchPaymentBreakdown()
         }
     }
 
@@ -154,9 +157,13 @@ struct WorkerDetailView: View {
         Group {
             if let breakdown = paymentBreakdown {
                 VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                    Text("Payment Breakdown")
-                        .font(AppTheme.Typography.title3)
-                        .foregroundStyle(AppTheme.Colors.textPrimary)
+                    HStack {
+                        Text("Payment Breakdown")
+                            .font(AppTheme.Typography.title3)
+                            .foregroundStyle(AppTheme.Colors.textPrimary)
+                        Spacer()
+                        breakdownPeriodPicker
+                    }
 
                     VStack(spacing: 0) {
                         breakdownRow(label: "Shift Pay", value: String(format: "$%.2f", breakdown.shiftPay))
@@ -173,6 +180,28 @@ struct WorkerDetailView: View {
                 }
             }
         }
+    }
+
+    private var breakdownPeriodPicker: some View {
+        HStack(spacing: 0) {
+            ForEach(["1D", "1W"], id: \.self) { period in
+                Button {
+                    breakdownPeriod = period
+                } label: {
+                    Text(period == "1D" ? "24h" : "7d")
+                        .font(AppTheme.Typography.captionBold)
+                        .foregroundStyle(breakdownPeriod == period ? .white : AppTheme.Colors.textSecondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            breakdownPeriod == period
+                                ? AppTheme.Colors.primaryFallback
+                                : AppTheme.Colors.backgroundSecondary
+                        )
+                }
+            }
+        }
+        .clipShape(Capsule())
     }
 
     private func breakdownRow(label: String, value: String, bold: Bool = false) -> some View {
@@ -266,7 +295,7 @@ struct WorkerDetailView: View {
     private func fetchPaymentBreakdown() async {
         do {
             let response: PaymentBreakdownResponse = try await APIClient.shared.request(
-                .workerPayment(userId: worker.id, period: selectedPeriod.rawValue)
+                .workerPayment(userId: worker.id, period: breakdownPeriod)
             )
             self.paymentBreakdown = response
         } catch {
