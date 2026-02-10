@@ -95,12 +95,6 @@ struct SettingsView: View {
                     }
                     .listRowBackground(AppTheme.Colors.cardBackground)
 
-                    NavigationLink {
-                        BreakTrackingView()
-                    } label: {
-                        aboutRow(icon: "clock.badge.checkmark", title: "Break Tracking", detail: nil)
-                    }
-                    .listRowBackground(AppTheme.Colors.cardBackground)
                 } header: {
                     sectionHeader("Analytics")
                 }

@@ -49,7 +49,7 @@
 		A10001010000000000000041 /* ScreenshotViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000043 /* ScreenshotViewer.swift */; };
 		A10001010000000000000042 /* EditWorkerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000044 /* EditWorkerSheet.swift */; };
 		A10001010000000000000043 /* TelegramResponseTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000045 /* TelegramResponseTimeView.swift */; };
-		A10001010000000000000044 /* BreakTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000046 /* BreakTrackingView.swift */; };
+
 		A10001010000000000000045 /* WorkerEarningsChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000047 /* WorkerEarningsChartView.swift */; };
 /* End PBXBuildFile section */
 
@@ -98,7 +98,7 @@
 		A20001010000000000000043 /* ScreenshotViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotViewer.swift; sourceTree = "<group>"; };
 		A20001010000000000000044 /* EditWorkerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditWorkerSheet.swift; sourceTree = "<group>"; };
 		A20001010000000000000045 /* TelegramResponseTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramResponseTimeView.swift; sourceTree = "<group>"; };
-		A20001010000000000000046 /* BreakTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakTrackingView.swift; sourceTree = "<group>"; };
+
 		A20001010000000000000047 /* WorkerEarningsChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerEarningsChartView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -263,7 +263,6 @@
 			children = (
 				A20001010000000000000020 /* SettingsView.swift */,
 				A20001010000000000000045 /* TelegramResponseTimeView.swift */,
-				A20001010000000000000046 /* BreakTrackingView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -404,7 +403,6 @@
 				A10001010000000000000041 /* ScreenshotViewer.swift in Sources */,
 				A10001010000000000000042 /* EditWorkerSheet.swift in Sources */,
 				A10001010000000000000043 /* TelegramResponseTimeView.swift in Sources */,
-				A10001010000000000000044 /* BreakTrackingView.swift in Sources */,
 				A10001010000000000000045 /* WorkerEarningsChartView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -553,7 +551,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.4;
+				MARKETING_VERSION = 1.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.incometracker.app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -584,7 +582,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.4;
+				MARKETING_VERSION = 1.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.incometracker.app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

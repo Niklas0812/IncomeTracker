@@ -100,6 +100,7 @@ struct PercentChangeLabel: View {
             Text(String(format: "%.1f%%", abs(value)))
                 .font(AppTheme.Typography.captionBold)
         }
+        .fixedSize()
         .foregroundStyle(value >= 0 ? AppTheme.Colors.positive : AppTheme.Colors.negative)
         .padding(.horizontal, AppTheme.Spacing.xs)
         .padding(.vertical, 3)

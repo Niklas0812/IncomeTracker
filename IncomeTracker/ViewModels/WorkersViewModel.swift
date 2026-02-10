@@ -98,11 +98,41 @@ final class WorkersViewModel: ObservableObject {
         let txns = transactions(for: worker)
             .filter { $0.date >= start && $0.status == .completed }
 
-        let grouped = Dictionary(grouping: txns) { $0.date.dayKey }
-        return grouped.map { key, transactions in
-            WorkerChartPoint(
-                date: transactions.first?.date ?? .now,
-                label: key,
+        let calendar = Calendar.current
+        let components: Set<Calendar.Component>
+        switch period {
+        case .daily:
+            components = [.year, .month, .day, .hour]
+        case .weekly, .monthly:
+            components = [.year, .month, .day]
+        case .threeMonths, .sixMonths:
+            components = [.yearForWeekOfYear, .weekOfYear]
+        case .oneYear:
+            components = [.year, .month]
+        }
+
+        let grouped = Dictionary(grouping: txns) {
+            calendar.dateComponents(components, from: $0.date)
+        }
+
+        return grouped.map { comps, transactions in
+            let date = calendar.date(from: comps) ?? transactions.first?.date ?? .now
+            let label: String
+            switch period {
+            case .daily:
+                label = date.formatted(.dateTime.hour().minute())
+            case .weekly:
+                label = date.formatted(.dateTime.weekday(.abbreviated))
+            case .monthly:
+                label = date.formatted(.dateTime.day().month(.abbreviated))
+            case .threeMonths, .sixMonths:
+                label = date.formatted(.dateTime.day().month(.abbreviated))
+            case .oneYear:
+                label = date.formatted(.dateTime.month(.abbreviated))
+            }
+            return WorkerChartPoint(
+                date: date,
+                label: label,
                 amount: transactions.reduce(0) { $0 + $1.amount }
             )
         }

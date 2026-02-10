@@ -121,13 +121,25 @@ struct WorkersListView: View {
             }
             .onChange(of: navigateToWorkerId) { workerId in
                 if let workerId {
-                    path = NavigationPath()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        path.append(workerId)
-                        navigateToWorkerId = nil
-                    }
+                    attemptNavigateToWorker(workerId)
                 }
             }
+            .onChange(of: viewModel.isLoading) { isLoading in
+                if !isLoading, let workerId = navigateToWorkerId {
+                    attemptNavigateToWorker(workerId)
+                }
+            }
+        }
+    }
+
+    // MARK: - Navigation
+
+    private func attemptNavigateToWorker(_ workerId: Int) {
+        guard viewModel.workers.contains(where: { $0.id == workerId }) else { return }
+        path = NavigationPath()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            path.append(workerId)
+            navigateToWorkerId = nil
         }
     }
 

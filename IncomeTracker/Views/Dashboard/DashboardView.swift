@@ -6,12 +6,13 @@ struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @State private var animatedTotal: Decimal = 0
     @State private var hasAppeared = false
+    @State private var selectedTransaction: Transaction?
 
     var body: some View {
         ScrollView {
             VStack(spacing: AppTheme.Spacing.lg) {
-                headerSection
                 periodSelector
+                    .padding(.top, AppTheme.Spacing.xs)
 
                 if viewModel.isLoading && viewModel.totalIncome == 0 {
                     loadingPlaceholder
@@ -43,21 +44,11 @@ struct DashboardView: View {
         .onChange(of: viewModel.totalIncome) { _ in
             animateCountUp()
         }
-    }
-
-    // MARK: - Header
-
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
-            Text(Date.greetingPrefix)
-                .font(AppTheme.Typography.title2)
-                .foregroundStyle(AppTheme.Colors.textPrimary)
-            Text(Date.now.fullDateString)
-                .font(AppTheme.Typography.subheadline)
-                .foregroundStyle(AppTheme.Colors.textSecondary)
+        .sheet(item: $selectedTransaction) { transaction in
+            TransactionDetailSheet(transaction: transaction)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, AppTheme.Spacing.md)
     }
 
     // MARK: - Period Selector
@@ -148,6 +139,10 @@ struct DashboardView: View {
                 VStack(spacing: 0) {
                     ForEach(viewModel.recentTransactions) { transaction in
                         TransactionRow(transaction: transaction)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedTransaction = transaction
+                            }
                         if transaction.id != viewModel.recentTransactions.last?.id {
                             Divider()
                                 .padding(.leading, 56)

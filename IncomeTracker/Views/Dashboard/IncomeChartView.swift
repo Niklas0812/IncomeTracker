@@ -60,7 +60,7 @@ struct IncomeChartView: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
                     AxisValueLabel(format: xAxisDateFormat)
                         .font(AppTheme.Typography.micro)
                         .foregroundStyle(AppTheme.Colors.textTertiary)
@@ -103,6 +103,9 @@ struct IncomeChartView: View {
             }
             .chartYScale(domain: 0...max(maxY, 1))
             .chartXScale(domain: xDomain)
+            .chartPlotStyle { plot in
+                plot.padding(.trailing, 8)
+            }
             .frame(height: 200)
             .padding(.horizontal, AppTheme.Spacing.xs)
         }
