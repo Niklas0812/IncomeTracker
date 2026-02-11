@@ -24,9 +24,13 @@ struct IncomeChartView: View {
             let startOfLastMonth = calendar.dateInterval(of: .month, for: maxDate)?.start ?? maxDate
             let endDomain = calendar.date(byAdding: .month, value: 1, to: startOfLastMonth) ?? maxDate
             return startOfFirstMonth...endDomain
-        case .weekly, .monthly:
+        case .weekly:
             let paddedMin = calendar.date(byAdding: .hour, value: -12, to: minDate) ?? minDate
-            let paddedMax = calendar.date(byAdding: .hour, value: 12, to: maxDate) ?? maxDate
+            let paddedMax = calendar.date(byAdding: .hour, value: 23, to: maxDate) ?? maxDate
+            return paddedMin...paddedMax
+        case .monthly:
+            let paddedMin = calendar.date(byAdding: .hour, value: -12, to: minDate) ?? minDate
+            let paddedMax = calendar.date(byAdding: .hour, value: 23, to: maxDate) ?? maxDate
             return paddedMin...paddedMax
         default:
             let paddedMin = calendar.date(byAdding: chartUnit, value: -1, to: minDate) ?? minDate
@@ -75,7 +79,13 @@ struct IncomeChartView: View {
             }
             .chartXAxis {
                 if period == .threeMonths || period == .sixMonths || period == .oneYear {
-                    AxisMarks(values: .stride(by: .month)) { _ in
+                    AxisMarks(values: monthlyAxisDates) { _ in
+                        AxisValueLabel(format: xAxisDateFormat)
+                            .font(AppTheme.Typography.micro)
+                            .foregroundStyle(AppTheme.Colors.textTertiary)
+                    }
+                } else if period == .weekly {
+                    AxisMarks(values: .stride(by: .day)) { _ in
                         AxisValueLabel(format: xAxisDateFormat)
                             .font(AppTheme.Typography.micro)
                             .foregroundStyle(AppTheme.Colors.textTertiary)
@@ -133,7 +143,7 @@ struct IncomeChartView: View {
         }
         .padding(AppTheme.Spacing.md)
         .chartCardStyle()
-        .animation(.easeInOut(duration: 0.2), value: period)
+        .transaction { t in t.animation = nil }
         .onChange(of: period) { _ in
             selectedPoint = nil
         }
@@ -168,6 +178,24 @@ struct IncomeChartView: View {
         case .oneYear: return .ratio(0.7)
         default: return .automatic
         }
+    }
+
+    private var monthlyAxisDates: [Date] {
+        let calendar = Calendar.current
+        var dates: [Date] = []
+        for point in dataPoints {
+            if let interval = calendar.dateInterval(of: .month, for: point.date) {
+                let midpoint = interval.start.addingTimeInterval(interval.duration / 2)
+                dates.append(midpoint)
+            }
+        }
+        // For 1Y (>6 months), show every other label to prevent crowding
+        if dates.count > 6 {
+            return dates.enumerated().compactMap { index, date in
+                (dates.count - 1 - index).isMultiple(of: 2) ? date : nil
+            }
+        }
+        return dates
     }
 
     private var xAxisDateFormat: Date.FormatStyle {

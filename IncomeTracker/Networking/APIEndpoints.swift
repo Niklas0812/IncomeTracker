@@ -15,10 +15,14 @@ enum APIEndpoint {
     case screenshot(filename: String)
     case telegramStats
     case telegramUsers
+    case telegramDeleteUser(userId: String)
     case telegramRegister
     case telegramSendCode
     case telegramVerify
     case telegramAnalyze
+    case workerDailyPayments(userId: Int, days: Int)
+    case workerBiweeklyPayments(userId: Int, count: Int)
+    case markPaymentPaid(userId: Int)
     case bonusTiers
     case updateBonusTiers
     case breaks(userId: Int?)
@@ -39,6 +43,12 @@ enum APIEndpoint {
             return "/api/workers/\(userId)"
         case .workerPayment(let userId, _):
             return "/api/workers/\(userId)/payment"
+        case .workerDailyPayments(let userId, _):
+            return "/api/workers/\(userId)/payments/daily"
+        case .workerBiweeklyPayments(let userId, _):
+            return "/api/workers/\(userId)/payments/biweekly"
+        case .markPaymentPaid(let userId):
+            return "/api/workers/\(userId)/payments/mark-paid"
         case .availableWorkers:
             return "/api/available-workers"
         case .screenshot(let filename):
@@ -47,6 +57,8 @@ enum APIEndpoint {
             return "/api/telegram-stats"
         case .telegramUsers:
             return "/api/telegram/users"
+        case .telegramDeleteUser(let userId):
+            return "/api/telegram/users/\(userId)"
         case .telegramRegister:
             return "/api/telegram/register"
         case .telegramSendCode:
@@ -82,6 +94,10 @@ enum APIEndpoint {
             return nil
         case .workerPayment(_, let period):
             return [URLQueryItem(name: "period", value: period)]
+        case .workerDailyPayments(_, let days):
+            return [URLQueryItem(name: "days", value: "\(days)")]
+        case .workerBiweeklyPayments(_, let count):
+            return [URLQueryItem(name: "count", value: "\(count)")]
         case .breaks(let userId):
             if let userId { return [URLQueryItem(name: "user_id", value: "\(userId)")] }
             return nil
@@ -94,9 +110,9 @@ enum APIEndpoint {
         switch self {
         case .createWorker, .telegramRegister, .telegramSendCode, .telegramVerify, .telegramAnalyze:
             return "POST"
-        case .updateWorker, .updateBonusTiers:
+        case .updateWorker, .updateBonusTiers, .markPaymentPaid:
             return "PUT"
-        case .deleteWorker:
+        case .deleteWorker, .telegramDeleteUser:
             return "DELETE"
         default:
             return "GET"

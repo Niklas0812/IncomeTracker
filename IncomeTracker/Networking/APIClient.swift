@@ -7,6 +7,7 @@ final class APIClient {
     private static let hardcodedToken = "changeme"
 
     private let session: URLSession
+    private let longSession: URLSession
     private let decoder: JSONDecoder
 
     var baseURL: String {
@@ -24,10 +25,16 @@ final class APIClient {
         config.timeoutIntervalForRequest = 15
         config.timeoutIntervalForResource = 30
         session = URLSession(configuration: config)
+
+        let longConfig = URLSessionConfiguration.default
+        longConfig.timeoutIntervalForRequest = 150
+        longConfig.timeoutIntervalForResource = 150
+        longSession = URLSession(configuration: longConfig)
+
         decoder = JSONDecoder()
     }
 
-    func request<T: Decodable>(_ endpoint: APIEndpoint, body: Data? = nil) async throws -> T {
+    func request<T: Decodable>(_ endpoint: APIEndpoint, body: Data? = nil, longTimeout: Bool = false) async throws -> T {
         guard !baseURL.isEmpty, var components = URLComponents(string: baseURL + endpoint.path) else {
             throw NetworkError.invalidURL
         }
@@ -51,7 +58,8 @@ final class APIClient {
         let response: URLResponse
 
         do {
-            (data, response) = try await session.data(for: urlRequest)
+            let activeSession = longTimeout ? longSession : session
+            (data, response) = try await activeSession.data(for: urlRequest)
         } catch let error as URLError {
             switch error.code {
             case .timedOut:

@@ -7,9 +7,7 @@ struct WorkerDetailView: View {
 
     @State private var selectedPeriod: TimePeriod = .monthly
     @State private var showEditSheet = false
-    @State private var paymentBreakdown: PaymentBreakdownResponse?
     @State private var isLoadingDetail = true
-    @State private var breakdownPeriod: String = "1D"
 
     private var periodEarnings: Decimal { viewModel.earnings(for: worker, in: selectedPeriod) }
     private var chartData: [WorkerChartPoint] { viewModel.chartData(for: worker, in: selectedPeriod) }
@@ -38,7 +36,7 @@ struct WorkerDetailView: View {
                     .padding(.horizontal, AppTheme.Spacing.xs)
                 } else {
                     earningsChart
-                    paymentBreakdownSection
+                    paymentRecordsLink
                     statsGrid
                     transactionHistory
                 }
@@ -50,7 +48,6 @@ struct WorkerDetailView: View {
             do {
                 let _ = try await viewModel.fetchWorkerDetail(worker, period: selectedPeriod)
             } catch {}
-            await fetchPaymentBreakdown()
         }
         .background(AppTheme.Colors.backgroundPrimary)
         .navigationTitle(worker.name)
@@ -77,9 +74,6 @@ struct WorkerDetailView: View {
                 let _ = try await viewModel.fetchWorkerDetail(worker, period: selectedPeriod)
             } catch {}
             isLoadingDetail = false
-        }
-        .task(id: breakdownPeriod) {
-            await fetchPaymentBreakdown()
         }
     }
 
@@ -157,70 +151,30 @@ struct WorkerDetailView: View {
         )
     }
 
-    // MARK: - Payment Breakdown
+    // MARK: - Payment Records Link
 
-    private var paymentBreakdownSection: some View {
-        Group {
-            if let breakdown = paymentBreakdown {
-                VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                    HStack {
-                        Text("Payment Breakdown")
-                            .font(AppTheme.Typography.title3)
-                            .foregroundStyle(AppTheme.Colors.textPrimary)
-                        Spacer()
-                        breakdownPeriodPicker
-                    }
-
-                    VStack(spacing: 0) {
-                        breakdownRow(label: "Shift Pay", value: String(format: "$%.2f", breakdown.shiftPay))
-                        Divider().padding(.leading, AppTheme.Spacing.md)
-                        breakdownRow(label: "Bonus", value: String(format: "$%.2f", breakdown.bonus))
-                        Divider().padding(.leading, AppTheme.Spacing.md)
-                        breakdownRow(label: "Total Payment", value: String(format: "$%.2f", breakdown.totalPayment), bold: true)
-                        Divider().padding(.leading, AppTheme.Spacing.md)
-                        breakdownRow(label: "EUR Earned", value: String(format: "\u{20AC}%.2f", breakdown.totalEurEarned))
-                        Divider().padding(.leading, AppTheme.Spacing.md)
-                        breakdownRow(label: "Transactions", value: "\(breakdown.transactionCount)")
-                    }
-                    .cardStyle()
+    private var paymentRecordsLink: some View {
+        NavigationLink {
+            WorkerPaymentsView(userId: worker.id)
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.xxs) {
+                    Text("Payment Records")
+                        .font(AppTheme.Typography.headline)
+                        .foregroundStyle(AppTheme.Colors.textPrimary)
+                    Text("Daily & biweekly payment tracking")
+                        .font(AppTheme.Typography.caption)
+                        .foregroundStyle(AppTheme.Colors.textTertiary)
                 }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(AppTheme.Typography.caption)
+                    .foregroundStyle(AppTheme.Colors.textTertiary)
             }
+            .padding(AppTheme.Spacing.md)
+            .cardStyle()
         }
-    }
-
-    private var breakdownPeriodPicker: some View {
-        HStack(spacing: 0) {
-            ForEach(["1D", "1W"], id: \.self) { period in
-                Button {
-                    breakdownPeriod = period
-                } label: {
-                    Text(period == "1D" ? "24h" : "7d")
-                        .font(AppTheme.Typography.captionBold)
-                        .foregroundStyle(breakdownPeriod == period ? .white : AppTheme.Colors.textSecondary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            breakdownPeriod == period
-                                ? AppTheme.Colors.primaryFallback
-                                : AppTheme.Colors.backgroundSecondary
-                        )
-                }
-            }
-        }
-        .clipShape(Capsule())
-    }
-
-    private func breakdownRow(label: String, value: String, bold: Bool = false) -> some View {
-        HStack {
-            Text(label)
-                .font(bold ? AppTheme.Typography.headline : AppTheme.Typography.subheadline)
-                .foregroundStyle(AppTheme.Colors.textSecondary)
-            Spacer()
-            Text(value)
-                .font(bold ? AppTheme.Typography.headline : AppTheme.Typography.callout)
-                .foregroundStyle(bold ? AppTheme.Colors.positive : AppTheme.Colors.textPrimary)
-        }
-        .padding(AppTheme.Spacing.md)
+        .buttonStyle(.plain)
     }
 
     // MARK: - Stats Grid
@@ -296,18 +250,6 @@ struct WorkerDetailView: View {
         }
     }
 
-    // MARK: - Helpers
-
-    private func fetchPaymentBreakdown() async {
-        do {
-            let response: PaymentBreakdownResponse = try await APIClient.shared.request(
-                .workerPayment(userId: worker.id, period: breakdownPeriod)
-            )
-            self.paymentBreakdown = response
-        } catch {
-            // silently fail
-        }
-    }
 }
 
 struct WorkerDetailView_Previews: PreviewProvider {

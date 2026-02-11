@@ -52,6 +52,10 @@
 
 		A10001010000000000000045 /* WorkerEarningsChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000047 /* WorkerEarningsChartView.swift */; };
 		A10001010000000000000046 /* BonusTiersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000048 /* BonusTiersView.swift */; };
+		A10001010000000000000049 /* WorkerPaymentsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000049 /* WorkerPaymentsViewModel.swift */; };
+		A10001010000000000000050 /* WorkerPaymentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000050 /* WorkerPaymentsView.swift */; };
+		A10001010000000000000051 /* DailyPaymentRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000051 /* DailyPaymentRow.swift */; };
+		A10001010000000000000052 /* BiweeklyPaymentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000052 /* BiweeklyPaymentCard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -102,6 +106,10 @@
 
 		A20001010000000000000047 /* WorkerEarningsChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerEarningsChartView.swift; sourceTree = "<group>"; };
 		A20001010000000000000048 /* BonusTiersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonusTiersView.swift; sourceTree = "<group>"; };
+		A20001010000000000000049 /* WorkerPaymentsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerPaymentsViewModel.swift; sourceTree = "<group>"; };
+		A20001010000000000000050 /* WorkerPaymentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerPaymentsView.swift; sourceTree = "<group>"; };
+		A20001010000000000000051 /* DailyPaymentRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyPaymentRow.swift; sourceTree = "<group>"; };
+		A20001010000000000000052 /* BiweeklyPaymentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiweeklyPaymentCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -211,6 +219,7 @@
 				A20001010000000000000008 /* TransactionsViewModel.swift */,
 				A20001010000000000000009 /* WorkersViewModel.swift */,
 				A20001010000000000000010 /* SettingsViewModel.swift */,
+				A20001010000000000000049 /* WorkerPaymentsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -256,6 +265,9 @@
 				A20001010000000000000019 /* AddWorkerSheet.swift */,
 				A20001010000000000000044 /* EditWorkerSheet.swift */,
 				A20001010000000000000047 /* WorkerEarningsChartView.swift */,
+				A20001010000000000000050 /* WorkerPaymentsView.swift */,
+				A20001010000000000000051 /* DailyPaymentRow.swift */,
+				A20001010000000000000052 /* BiweeklyPaymentCard.swift */,
 			);
 			path = Workers;
 			sourceTree = "<group>";
@@ -408,6 +420,10 @@
 				A10001010000000000000043 /* TelegramResponseTimeView.swift in Sources */,
 				A10001010000000000000045 /* WorkerEarningsChartView.swift in Sources */,
 				A10001010000000000000046 /* BonusTiersView.swift in Sources */,
+				A10001010000000000000049 /* WorkerPaymentsViewModel.swift in Sources */,
+				A10001010000000000000050 /* WorkerPaymentsView.swift in Sources */,
+				A10001010000000000000051 /* DailyPaymentRow.swift in Sources */,
+				A10001010000000000000052 /* BiweeklyPaymentCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

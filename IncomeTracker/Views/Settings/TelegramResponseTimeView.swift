@@ -123,6 +123,11 @@ struct TelegramResponseTimeView: View {
                             }
                         }
                     }
+                    .onDelete { offsets in
+                        guard let index = offsets.first else { return }
+                        let user = vm.users[index]
+                        vm.deleteUser(user.userId)
+                    }
                 }
                 .listStyle(.plain)
             }
@@ -482,6 +487,21 @@ final class TelegramViewModel: ObservableObject {
         }
     }
 
+    func deleteUser(_ userId: String) {
+        Task {
+            do {
+                let _: TelegramActionResponse = try await client.request(.telegramDeleteUser(userId: userId))
+                await MainActor.run {
+                    self.users.removeAll { $0.userId == userId }
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
     func analyze() {
         state = .analyzing
         errorMessage = nil
@@ -494,7 +514,7 @@ final class TelegramViewModel: ObservableObject {
 
         Task {
             do {
-                let response: TelegramAnalysisResponse = try await client.request(.telegramAnalyze, body: data)
+                let response: TelegramAnalysisResponse = try await client.request(.telegramAnalyze, body: data, longTimeout: true)
                 await MainActor.run {
                     if let err = response.error, !err.isEmpty {
                         self.state = .error(err)

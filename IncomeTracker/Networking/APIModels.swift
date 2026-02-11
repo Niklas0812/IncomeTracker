@@ -336,6 +336,151 @@ struct TelegramAnalysisResultDTO: Codable, Identifiable {
     }
 }
 
+// MARK: - Worker Payments (Daily)
+
+struct DailyPaymentsResponse: Codable {
+    let userId: Int
+    let days: Int
+    let payments: [DailyPaymentDTO]
+    let summary: DailyPaymentSummary
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case days, payments, summary
+    }
+}
+
+struct DailyPaymentDTO: Codable, Identifiable {
+    let id: Int
+    let shiftDate: String
+    let hoursWorked: Double
+    let hourlyRate: Double
+    let basePayment: Double
+    let earningsGenerated: Double
+    let bonusAmount: Double
+    let totalPayment: Double
+    let transactionCount: Int
+    var paymentStatus: String
+    let notes: String?
+    let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case shiftDate = "shift_date"
+        case hoursWorked = "hours_worked"
+        case hourlyRate = "hourly_rate"
+        case basePayment = "base_payment"
+        case earningsGenerated = "earnings_generated"
+        case bonusAmount = "bonus_amount"
+        case totalPayment = "total_payment"
+        case transactionCount = "transaction_count"
+        case paymentStatus = "payment_status"
+        case notes
+        case createdAt = "created_at"
+    }
+}
+
+struct DailyPaymentSummary: Codable {
+    let totalOutstanding: Double
+    let totalPaid: Double
+    let daysWithActivity: Int
+
+    enum CodingKeys: String, CodingKey {
+        case totalOutstanding = "total_outstanding"
+        case totalPaid = "total_paid"
+        case daysWithActivity = "days_with_activity"
+    }
+}
+
+// MARK: - Worker Payments (Biweekly)
+
+struct BiweeklyPaymentsResponse: Codable {
+    let userId: Int
+    let periods: [BiweeklyPaymentDTO]
+    let summary: BiweeklySummary
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case periods, summary
+    }
+}
+
+struct BiweeklyPaymentDTO: Codable, Identifiable {
+    let id: Int
+    let weekIdentifier: String
+    let weekStart: String
+    let weekEnd: String
+    let totalHours: Double
+    let hourlyRate: Double
+    let basePayment: Double
+    let earningsGenerated: Double
+    let bonusAmount: Double
+    let totalPayment: Double
+    var paymentStatus: String
+    let dailyBreakdown: [BiweeklyDailyItemDTO]
+    let notes: String?
+    let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case weekIdentifier = "week_identifier"
+        case weekStart = "week_start"
+        case weekEnd = "week_end"
+        case totalHours = "total_hours"
+        case hourlyRate = "hourly_rate"
+        case basePayment = "base_payment"
+        case earningsGenerated = "earnings_generated"
+        case bonusAmount = "bonus_amount"
+        case totalPayment = "total_payment"
+        case paymentStatus = "payment_status"
+        case dailyBreakdown = "daily_breakdown"
+        case notes
+        case createdAt = "created_at"
+    }
+}
+
+struct BiweeklyDailyItemDTO: Codable, Identifiable {
+    let id: Int
+    let shiftDate: String
+    let totalPayment: Double
+    let earningsGenerated: Double
+    let paymentStatus: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case shiftDate = "shift_date"
+        case totalPayment = "total_payment"
+        case earningsGenerated = "earnings_generated"
+        case paymentStatus = "payment_status"
+    }
+}
+
+struct BiweeklySummary: Codable {
+    let totalOutstanding: Double
+    let totalPaid: Double
+
+    enum CodingKeys: String, CodingKey {
+        case totalOutstanding = "total_outstanding"
+        case totalPaid = "total_paid"
+    }
+}
+
+// MARK: - Mark Payment
+
+struct MarkPaidResponse: Codable {
+    let status: String
+    let paymentId: Int
+    let paymentType: String
+    let newStatus: String
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case paymentId = "payment_id"
+        case paymentType = "payment_type"
+        case newStatus = "new_status"
+    }
+}
+
 // MARK: - Bonus Tiers
 
 struct BonusTiersResponse: Codable {
