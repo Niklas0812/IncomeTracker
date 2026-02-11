@@ -38,24 +38,6 @@ struct WorkerEarningsChartView: View {
         }
     }
 
-    private var monthlyAxisDates: [Date] {
-        let calendar = Calendar.current
-        var seen = Set<String>()
-        var dates: [Date] = []
-        for point in chartData {
-            let y = calendar.component(.year, from: point.date)
-            let m = calendar.component(.month, from: point.date)
-            let key = "\(y)-\(m)"
-            if !seen.contains(key) {
-                seen.insert(key)
-                if let d = calendar.date(from: DateComponents(year: y, month: m, day: 15)) {
-                    dates.append(d)
-                }
-            }
-        }
-        return dates.sorted()
-    }
-
     private var xAxisFormat: Date.FormatStyle {
         switch period {
         case .daily:
@@ -88,7 +70,7 @@ struct WorkerEarningsChartView: View {
             let startOfLastMonth = calendar.dateInterval(of: .month, for: maxDate)?.start ?? maxDate
             let endDomain = calendar.date(byAdding: .month, value: 1, to: startOfLastMonth) ?? maxDate
             return startOfFirstMonth...endDomain
-        case .weekly:
+        case .weekly, .monthly:
             let paddedMin = calendar.date(byAdding: .hour, value: -12, to: minDate) ?? minDate
             let paddedMax = calendar.date(byAdding: .hour, value: 12, to: maxDate) ?? maxDate
             return paddedMin...paddedMax
@@ -133,7 +115,7 @@ struct WorkerEarningsChartView: View {
         }
         .chartXAxis {
             if period == .threeMonths || period == .sixMonths || period == .oneYear {
-                AxisMarks(values: monthlyAxisDates) { _ in
+                AxisMarks(values: .stride(by: .month)) { _ in
                     AxisValueLabel(format: xAxisFormat)
                         .font(AppTheme.Typography.micro)
                         .foregroundStyle(AppTheme.Colors.textTertiary)
@@ -182,7 +164,7 @@ struct WorkerEarningsChartView: View {
         .chartYScale(domain: 0...max(maxY, 1))
         .chartXScale(domain: xDomain)
         .chartPlotStyle { plot in
-            plot.padding(.leading, 4).padding(.trailing, 24)
+            plot.padding(.leading, 8).padding(.trailing, 28)
         }
         .frame(height: 180)
         .id(period)
