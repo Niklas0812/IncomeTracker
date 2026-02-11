@@ -12,9 +12,20 @@ struct WorkerEarningsChartView: View {
         case .daily: return .hour
         case .weekly: return .day
         case .monthly: return .day
-        case .threeMonths: return .weekOfYear
-        case .sixMonths: return .weekOfYear
+        case .threeMonths: return .month
+        case .sixMonths: return .month
         case .oneYear: return .month
+        }
+    }
+
+    private var xAxisLabelCount: Int {
+        switch period {
+        case .daily: return 6
+        case .weekly: return 7
+        case .monthly: return 6
+        case .threeMonths: return 3
+        case .sixMonths: return 6
+        case .oneYear: return 12
         }
     }
 
@@ -27,7 +38,7 @@ struct WorkerEarningsChartView: View {
         case .monthly:
             return .dateTime.day().month(.abbreviated)
         case .threeMonths, .sixMonths:
-            return .dateTime.day().month(.abbreviated)
+            return .dateTime.month(.abbreviated)
         case .oneYear:
             return .dateTime.month(.abbreviated)
         }
@@ -44,9 +55,16 @@ struct WorkerEarningsChartView: View {
             return Date()...Date()
         }
         let calendar = Calendar.current
-        let paddedMin = calendar.date(byAdding: chartUnit, value: -1, to: minDate) ?? minDate
-        let paddedMax = calendar.date(byAdding: chartUnit, value: 1, to: maxDate) ?? maxDate
-        return paddedMin...paddedMax
+        switch period {
+        case .threeMonths, .sixMonths, .oneYear:
+            let paddedMin = calendar.date(byAdding: .day, value: -15, to: minDate) ?? minDate
+            let paddedMax = calendar.date(byAdding: .day, value: 15, to: maxDate) ?? maxDate
+            return paddedMin...paddedMax
+        default:
+            let paddedMin = calendar.date(byAdding: chartUnit, value: -1, to: minDate) ?? minDate
+            let paddedMax = calendar.date(byAdding: chartUnit, value: 1, to: maxDate) ?? maxDate
+            return paddedMin...paddedMax
+        }
     }
 
     var body: some View {
@@ -81,7 +99,7 @@ struct WorkerEarningsChartView: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+            AxisMarks(values: .automatic(desiredCount: xAxisLabelCount)) { _ in
                 AxisValueLabel(format: xAxisFormat)
                     .font(AppTheme.Typography.micro)
                     .foregroundStyle(AppTheme.Colors.textTertiary)
@@ -123,10 +141,10 @@ struct WorkerEarningsChartView: View {
         .chartYScale(domain: 0...max(maxY, 1))
         .chartXScale(domain: xDomain)
         .chartPlotStyle { plot in
-            plot.padding(.trailing, 40)
+            plot.padding(.trailing, 8)
         }
         .frame(height: 180)
         .padding(AppTheme.Spacing.md)
-        .cardStyle()
+        .chartCardStyle()
     }
 }

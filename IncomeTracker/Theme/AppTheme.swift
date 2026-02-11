@@ -130,6 +130,37 @@ extension View {
     }
 }
 
+// MARK: - Chart Card Style (non-clipping for axis labels)
+
+struct ChartCardStyle: ViewModifier {
+    @Environment(\.colorScheme) var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .padding(.bottom, AppTheme.Spacing.xxs)
+            .background(
+                RoundedRectangle(cornerRadius: AppTheme.Radius.large, style: .continuous)
+                    .fill(AppTheme.Colors.cardBackground)
+            )
+            .overlay {
+                if colorScheme == .dark {
+                    RoundedRectangle(cornerRadius: AppTheme.Radius.large, style: .continuous)
+                        .stroke(AppTheme.Colors.border.opacity(0.3), lineWidth: 0.5)
+                }
+            }
+            .shadow(
+                color: colorScheme == .light ? .black.opacity(0.04) : .clear,
+                radius: 8, x: 0, y: 4
+            )
+    }
+}
+
+extension View {
+    func chartCardStyle() -> some View {
+        modifier(ChartCardStyle())
+    }
+}
+
 // MARK: - Preview
 
 struct AppTheme_Previews: PreviewProvider {
