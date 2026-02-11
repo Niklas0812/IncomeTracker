@@ -24,6 +24,10 @@ struct IncomeChartView: View {
             let startOfLastMonth = calendar.dateInterval(of: .month, for: maxDate)?.start ?? maxDate
             let endDomain = calendar.date(byAdding: .month, value: 1, to: startOfLastMonth) ?? maxDate
             return startOfFirstMonth...endDomain
+        case .weekly:
+            let paddedMin = calendar.date(byAdding: .hour, value: -12, to: minDate) ?? minDate
+            let paddedMax = calendar.date(byAdding: .hour, value: 12, to: maxDate) ?? maxDate
+            return paddedMin...paddedMax
         default:
             let paddedMin = calendar.date(byAdding: chartUnit, value: -1, to: minDate) ?? minDate
             let paddedMax = calendar.date(byAdding: chartUnit, value: 1, to: maxDate) ?? maxDate
@@ -122,7 +126,7 @@ struct IncomeChartView: View {
             .chartYScale(domain: 0...max(maxY, 1))
             .chartXScale(domain: xDomain)
             .chartPlotStyle { plot in
-                plot.padding(.leading, 4).padding(.trailing, 16)
+                plot.padding(.leading, 4).padding(.trailing, 24)
             }
             .frame(height: 200)
         }
@@ -171,7 +175,7 @@ struct IncomeChartView: View {
             let key = "\(y)-\(m)"
             if !seen.contains(key) {
                 seen.insert(key)
-                if let d = calendar.date(from: DateComponents(year: y, month: m, day: 1)) {
+                if let d = calendar.date(from: DateComponents(year: y, month: m, day: 15)) {
                     dates.append(d)
                 }
             }
