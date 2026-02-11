@@ -29,6 +29,33 @@ struct WorkerEarningsChartView: View {
         }
     }
 
+    private var barWidth: MarkDimension {
+        switch period {
+        case .threeMonths: return .ratio(0.5)
+        case .sixMonths: return .ratio(0.6)
+        case .oneYear: return .ratio(0.7)
+        default: return .automatic
+        }
+    }
+
+    private var monthlyAxisDates: [Date] {
+        let calendar = Calendar.current
+        var seen = Set<String>()
+        var dates: [Date] = []
+        for point in chartData {
+            let y = calendar.component(.year, from: point.date)
+            let m = calendar.component(.month, from: point.date)
+            let key = "\(y)-\(m)"
+            if !seen.contains(key) {
+                seen.insert(key)
+                if let d = calendar.date(from: DateComponents(year: y, month: m, day: 1)) {
+                    dates.append(d)
+                }
+            }
+        }
+        return dates.sorted()
+    }
+
     private var xAxisFormat: Date.FormatStyle {
         switch period {
         case .daily:
@@ -57,9 +84,10 @@ struct WorkerEarningsChartView: View {
         let calendar = Calendar.current
         switch period {
         case .threeMonths, .sixMonths, .oneYear:
-            let paddedMin = calendar.date(byAdding: .day, value: -15, to: minDate) ?? minDate
-            let paddedMax = calendar.date(byAdding: .day, value: 15, to: maxDate) ?? maxDate
-            return paddedMin...paddedMax
+            let startOfFirstMonth = calendar.dateInterval(of: .month, for: minDate)?.start ?? minDate
+            let startOfLastMonth = calendar.dateInterval(of: .month, for: maxDate)?.start ?? maxDate
+            let endDomain = calendar.date(byAdding: .month, value: 1, to: startOfLastMonth) ?? maxDate
+            return startOfFirstMonth...endDomain
         default:
             let paddedMin = calendar.date(byAdding: chartUnit, value: -1, to: minDate) ?? minDate
             let paddedMax = calendar.date(byAdding: chartUnit, value: 1, to: maxDate) ?? maxDate
@@ -71,7 +99,8 @@ struct WorkerEarningsChartView: View {
         Chart(chartData) { point in
             BarMark(
                 x: .value("Date", point.date, unit: chartUnit),
-                y: .value("Amount", point.amount.doubleValue)
+                y: .value("Amount", point.amount.doubleValue),
+                width: barWidth
             )
             .foregroundStyle(AppTheme.Colors.primaryFallback.gradient)
             .cornerRadius(4)
@@ -99,10 +128,18 @@ struct WorkerEarningsChartView: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: xAxisLabelCount)) { _ in
-                AxisValueLabel(format: xAxisFormat)
-                    .font(AppTheme.Typography.micro)
-                    .foregroundStyle(AppTheme.Colors.textTertiary)
+            if period == .threeMonths || period == .sixMonths || period == .oneYear {
+                AxisMarks(values: monthlyAxisDates) { _ in
+                    AxisValueLabel(format: xAxisFormat)
+                        .font(AppTheme.Typography.micro)
+                        .foregroundStyle(AppTheme.Colors.textTertiary)
+                }
+            } else {
+                AxisMarks(values: .automatic(desiredCount: xAxisLabelCount)) { _ in
+                    AxisValueLabel(format: xAxisFormat)
+                        .font(AppTheme.Typography.micro)
+                        .foregroundStyle(AppTheme.Colors.textTertiary)
+                }
             }
         }
         .chartYAxis {
@@ -141,7 +178,7 @@ struct WorkerEarningsChartView: View {
         .chartYScale(domain: 0...max(maxY, 1))
         .chartXScale(domain: xDomain)
         .chartPlotStyle { plot in
-            plot.padding(.trailing, 8)
+            plot.padding(.leading, 4).padding(.trailing, 16)
         }
         .frame(height: 180)
         .padding(AppTheme.Spacing.md)
