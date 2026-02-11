@@ -82,29 +82,31 @@ struct WorkerPaymentsView: View {
 
     // MARK: - Summary Card
 
+    private var summaryOutstanding: Double {
+        switch selectedTab {
+        case .daily: return vm.dailySummary?.totalOutstanding ?? 0
+        case .biweekly: return vm.biweeklySummary?.totalOutstanding ?? 0
+        }
+    }
+
+    private var summaryPaid: Double {
+        switch selectedTab {
+        case .daily: return vm.dailySummary?.totalPaid ?? 0
+        case .biweekly: return vm.biweeklySummary?.totalPaid ?? 0
+        }
+    }
+
     private var summaryCard: some View {
         HStack(spacing: AppTheme.Spacing.sm) {
-            let outstanding: Double
-            let paid: Double
-
-            switch selectedTab {
-            case .daily:
-                outstanding = vm.dailySummary?.totalOutstanding ?? 0
-                paid = vm.dailySummary?.totalPaid ?? 0
-            case .biweekly:
-                outstanding = vm.biweeklySummary?.totalOutstanding ?? 0
-                paid = vm.biweeklySummary?.totalPaid ?? 0
-            }
-
             summaryItem(
                 title: "Outstanding",
-                amount: outstanding,
+                amount: summaryOutstanding,
                 color: AppTheme.Colors.warning
             )
 
             summaryItem(
                 title: "Paid",
-                amount: paid,
+                amount: summaryPaid,
                 color: AppTheme.Colors.positive
             )
         }
