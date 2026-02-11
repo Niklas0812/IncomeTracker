@@ -397,7 +397,7 @@ final class TelegramViewModel: ObservableObject {
                 let response: TelegramActionResponse = try await client.request(.telegramRegister, body: data)
                 await MainActor.run {
                     self.isProcessing = false
-                    if response.status == "success" || response.status == "ok" {
+                    if response.status == "success" || response.status == "ok" || response.status == "saved" {
                         self.selectedUserId = self.regUserId
                         self.sendCode()
                     } else {
