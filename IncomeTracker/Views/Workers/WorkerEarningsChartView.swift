@@ -185,7 +185,12 @@ struct WorkerEarningsChartView: View {
             plot.padding(.leading, 4).padding(.trailing, 24)
         }
         .frame(height: 180)
+        .id(period)
         .padding(AppTheme.Spacing.md)
         .chartCardStyle()
+        .animation(.easeInOut(duration: 0.2), value: period)
+        .onChange(of: period) { _ in
+            selectedPoint = nil
+        }
     }
 }

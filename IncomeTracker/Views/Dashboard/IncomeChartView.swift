@@ -129,9 +129,14 @@ struct IncomeChartView: View {
                 plot.padding(.leading, 4).padding(.trailing, 24)
             }
             .frame(height: 200)
+            .id(period)
         }
         .padding(AppTheme.Spacing.md)
         .chartCardStyle()
+        .animation(.easeInOut(duration: 0.2), value: period)
+        .onChange(of: period) { _ in
+            selectedPoint = nil
+        }
     }
 
     private var chartUnit: Calendar.Component {
