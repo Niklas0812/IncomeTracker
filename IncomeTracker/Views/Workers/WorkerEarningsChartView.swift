@@ -54,7 +54,7 @@ struct WorkerEarningsChartView: View {
             AxisMarks(values: majorTickValues) { value in
                 AxisTick(length: 5)
                     .foregroundStyle(AppTheme.Colors.separator.opacity(0.5))
-                AxisValueLabel {
+                AxisValueLabel(centered: true) {
                     if let index = indexFromAxisValue(value), indexedPoints.indices.contains(index) {
                         axisLabel(for: index)
                     }
@@ -102,7 +102,7 @@ struct WorkerEarningsChartView: View {
         }
         .chartYScale(domain: 0...maxY)
         .chartXScale(domain: xDomain)
-        .chartXScale(range: .plotDimension(startPadding: xScalePadding, endPadding: xScalePadding))
+        .chartXScale(range: .plotDimension(startPadding: 0, endPadding: 0))
         .frame(height: 180)
         .padding(AppTheme.Spacing.md)
         .chartCardStyle()
@@ -153,22 +153,24 @@ struct WorkerEarningsChartView: View {
     }
 
     private var xDomain: ClosedRange<Double> {
-        guard !indexedPoints.isEmpty else { return -0.5...0.5 }
-        return -0.5...(Double(indexedPoints.count) - 0.5)
+        guard !indexedPoints.isEmpty else { return -1...1 }
+        return -axisDomainInset...(Double(indexedPoints.count - 1) + axisDomainInset)
     }
 
-    private var xScalePadding: CGFloat {
+    private var axisDomainInset: Double {
         switch layoutPeriod {
         case .weekly:
-            return 32
+            return 0.9
         case .monthly:
-            return 18
-        case .threeMonths, .sixMonths:
-            return 24
+            return 0.8
+        case .threeMonths:
+            return 0.95
+        case .sixMonths:
+            return 0.9
         case .oneYear:
-            return 30
+            return 1.05
         default:
-            return 12
+            return 0.7
         }
     }
 
