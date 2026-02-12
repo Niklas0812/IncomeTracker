@@ -2,34 +2,12 @@ import SwiftUI
 
 struct PeriodSelector: View {
     @Binding var selected: TimePeriod
+    @Namespace private var namespace
 
     var body: some View {
         HStack(spacing: AppTheme.Spacing.xxs) {
             ForEach(TimePeriod.allCases) { period in
-                Button {
-                    var transaction = Transaction()
-                    transaction.animation = nil
-                    withTransaction(transaction) {
-                        selected = period
-                    }
-                } label: {
-                    Text(period.rawValue)
-                        .font(AppTheme.Typography.captionBold)
-                        .foregroundStyle(selected == period ? .white : AppTheme.Colors.textSecondary)
-                        .padding(.horizontal, AppTheme.Spacing.sm)
-                        .padding(.vertical, AppTheme.Spacing.xs)
-                        .background {
-                            if selected == period {
-                                Capsule()
-                                    .fill(AppTheme.Colors.primaryFallback)
-                                    .matchedGeometryEffect(id: "period_pill", in: namespace)
-                            }
-                        }
-                }
-                .buttonStyle(.plain)
-                .animation(AppTheme.Animation.spring, value: selected)
-                .accessibilityLabel(period.displayName)
-                .accessibilityAddTraits(selected == period ? .isSelected : [])
+                periodButton(for: period)
             }
         }
         .padding(AppTheme.Spacing.xxs)
@@ -37,7 +15,37 @@ struct PeriodSelector: View {
         .clipShape(Capsule())
     }
 
-    @Namespace private var namespace
+    private func periodButton(for period: TimePeriod) -> some View {
+        Button {
+            var t = Transaction()
+            t.animation = nil
+            withTransaction(t) {
+                selected = period
+            }
+        } label: {
+            periodLabel(for: period)
+        }
+        .buttonStyle(.plain)
+        .animation(AppTheme.Animation.spring, value: selected)
+        .accessibilityLabel(period.displayName)
+        .accessibilityAddTraits(selected == period ? .isSelected : [])
+    }
+
+    private func periodLabel(for period: TimePeriod) -> some View {
+        let isSelected = selected == period
+        return Text(period.rawValue)
+            .font(AppTheme.Typography.captionBold)
+            .foregroundStyle(isSelected ? .white : AppTheme.Colors.textSecondary)
+            .padding(.horizontal, AppTheme.Spacing.sm)
+            .padding(.vertical, AppTheme.Spacing.xs)
+            .background {
+                if isSelected {
+                    Capsule()
+                        .fill(AppTheme.Colors.primaryFallback)
+                        .matchedGeometryEffect(id: "period_pill", in: namespace)
+                }
+            }
+    }
 }
 
 struct PeriodSelector_Previews: PreviewProvider {
