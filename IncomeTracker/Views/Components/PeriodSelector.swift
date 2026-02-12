@@ -2,46 +2,38 @@ import SwiftUI
 
 struct PeriodSelector: View {
     @Binding var selected: TimePeriod
-    @Namespace private var namespace
 
     var body: some View {
         HStack(spacing: AppTheme.Spacing.xxs) {
             ForEach(TimePeriod.allCases) { period in
-                periodButton(for: period)
+                Button {
+                    selected = period
+                } label: {
+                    Text(period.rawValue)
+                        .font(AppTheme.Typography.captionBold)
+                        .foregroundStyle(selected == period ? .white : AppTheme.Colors.textSecondary)
+                        .padding(.horizontal, AppTheme.Spacing.sm)
+                        .padding(.vertical, AppTheme.Spacing.xs)
+                        .background {
+                            if selected == period {
+                                Capsule()
+                                    .fill(AppTheme.Colors.primaryFallback)
+                                    .matchedGeometryEffect(id: "period_pill", in: namespace)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(period.displayName)
+                .accessibilityAddTraits(selected == period ? .isSelected : [])
             }
         }
+        .animation(AppTheme.Animation.spring, value: selected)
         .padding(AppTheme.Spacing.xxs)
         .background(AppTheme.Colors.backgroundSecondary)
         .clipShape(Capsule())
     }
 
-    private func periodButton(for period: TimePeriod) -> some View {
-        Button {
-            selected = period
-        } label: {
-            periodLabel(for: period)
-        }
-        .buttonStyle(.plain)
-        .animation(AppTheme.Animation.spring, value: selected)
-        .accessibilityLabel(period.displayName)
-        .accessibilityAddTraits(selected == period ? .isSelected : [])
-    }
-
-    private func periodLabel(for period: TimePeriod) -> some View {
-        let isSelected = selected == period
-        return Text(period.rawValue)
-            .font(AppTheme.Typography.captionBold)
-            .foregroundStyle(isSelected ? .white : AppTheme.Colors.textSecondary)
-            .padding(.horizontal, AppTheme.Spacing.sm)
-            .padding(.vertical, AppTheme.Spacing.xs)
-            .background {
-                if isSelected {
-                    Capsule()
-                        .fill(AppTheme.Colors.primaryFallback)
-                        .matchedGeometryEffect(id: "period_pill", in: namespace)
-                }
-            }
-    }
+    @Namespace private var namespace
 }
 
 struct PeriodSelector_Previews: PreviewProvider {

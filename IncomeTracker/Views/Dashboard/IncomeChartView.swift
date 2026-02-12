@@ -5,14 +5,11 @@ struct IncomeChartView: View {
     let dataPoints: [ChartDataPoint]
     let period: TimePeriod
 
-    @State private var selectedPoint: ChartDataPoint?
-
-    private var config: ChartConfiguration {
-        ChartConfiguration(period: period, dates: dataPoints.map(\.date))
-    }
+    @State private var selectedIndex: Int?
+    @State private var barRevealProgress: Double = 1
 
     private var maxY: Double {
-        let maxVal = dataPoints.map { ($0.paysafeAmount + $0.paypalAmount).doubleValue }.max() ?? 0
+        let maxVal = indexedPoints.map { ($0.point.paysafeAmount + $0.point.paypalAmount).doubleValue }.max() ?? 0
         return max(maxVal * 1.15, 1)
     }
 
@@ -24,115 +21,171 @@ struct IncomeChartView: View {
             }
             .padding(.horizontal, AppTheme.Spacing.md)
 
-            chartContent
+            Chart {
+                ForEach(indexedPoints) { item in
+                    BarMark(
+                        x: .value("Bucket", item.index),
+                        y: .value("Amount", item.point.paysafeAmount.doubleValue * barRevealProgress),
+                        width: barWidth
+                    )
+                    .position(by: .value("Source", "PaySafe"))
+                    .foregroundStyle(AppTheme.Colors.paysafe.gradient)
+                    .cornerRadius(4)
+
+                    BarMark(
+                        x: .value("Bucket", item.index),
+                        y: .value("Amount", item.point.paypalAmount.doubleValue * barRevealProgress),
+                        width: barWidth
+                    )
+                    .position(by: .value("Source", "PayPal"))
+                    .foregroundStyle(AppTheme.Colors.paypal.gradient)
+                    .cornerRadius(4)
+                }
+
+                if let selectedPoint = selectedPoint {
+                    RuleMark(x: .value("Selected", selectedPoint.index))
+                        .foregroundStyle(AppTheme.Colors.textTertiary.opacity(0.3))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                        .annotation(position: .top, spacing: 4) {
+                            tooltipView(for: selectedPoint.point)
+                        }
+                }
+            }
+            .chartXAxis {
+                if !minorTickIndices.isEmpty {
+                    AxisMarks(values: minorTickIndices) { _ in
+                        AxisTick(length: 3)
+                            .foregroundStyle(AppTheme.Colors.separator.opacity(0.35))
+                    }
+                }
+                AxisMarks(values: majorTickIndices) { value in
+                    AxisTick(length: 5)
+                        .foregroundStyle(AppTheme.Colors.separator.opacity(0.5))
+                    AxisValueLabel {
+                        if let index = value.as(Int.self), indexedPoints.indices.contains(index) {
+                            Text(period.chartAxisLabel(for: indexedPoints[index].point.date))
+                                .font(AppTheme.Typography.micro)
+                                .foregroundStyle(AppTheme.Colors.textTertiary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
+                        } else if let raw = value.as(Double.self) {
+                            let rounded = Int(raw.rounded())
+                            if indexedPoints.indices.contains(rounded) {
+                                Text(period.chartAxisLabel(for: indexedPoints[rounded].point.date))
+                                    .font(AppTheme.Typography.micro)
+                                    .foregroundStyle(AppTheme.Colors.textTertiary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                            }
+                        }
+                    }
+                    if period == .oneYear {
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [3, 3]))
+                            .foregroundStyle(AppTheme.Colors.separator.opacity(0.25))
+                    }
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                        .foregroundStyle(AppTheme.Colors.separator.opacity(0.5))
+                    AxisValueLabel {
+                        if let doubleVal = value.as(Double.self) {
+                            Text(Decimal(doubleVal).eurCompact)
+                            .font(AppTheme.Typography.micro)
+                            .foregroundStyle(AppTheme.Colors.textTertiary)
+                        }
+                    }
+                }
+            }
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    Rectangle()
+                        .fill(.clear)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    let originX = geo[proxy.plotAreaFrame].origin.x
+                                    let relativeX = value.location.x - originX
+                                    guard relativeX >= 0, relativeX <= proxy.plotAreaSize.width else { return }
+                                    if let bucket: Int = proxy.value(atX: relativeX), indexedPoints.indices.contains(bucket) {
+                                        selectedIndex = bucket
+                                    } else if let raw: Double = proxy.value(atX: relativeX) {
+                                        let bucket = Int(raw.rounded())
+                                        if indexedPoints.indices.contains(bucket) {
+                                            selectedIndex = bucket
+                                        }
+                                    }
+                                }
+                                .onEnded { _ in
+                                    selectedIndex = nil
+                                }
+                        )
+                }
+            }
+            .chartYScale(domain: 0...maxY)
+            .chartXScale(domain: xDomain)
+            .chartXScale(range: .plotDimension(startPadding: 10, endPadding: 10))
+            .frame(height: 200)
         }
         .padding(AppTheme.Spacing.md)
         .chartCardStyle()
+        .onAppear {
+            restartBarAnimation()
+        }
+        .onChange(of: dataSignature) { _ in
+            restartBarAnimation()
+        }
         .onChange(of: period) { _ in
-            selectedPoint = nil
+            selectedIndex = nil
+            restartBarAnimation()
         }
     }
 
-    private var chartContent: some View {
-        Chart {
-            ForEach(dataPoints) { point in
-                BarMark(
-                    x: .value("Date", point.date, unit: config.chartUnit),
-                    y: .value("PaySafe", point.paysafeAmount.doubleValue),
-                    width: config.barWidth
-                )
-                .foregroundStyle(AppTheme.Colors.paysafe.gradient)
-
-                BarMark(
-                    x: .value("Date", point.date, unit: config.chartUnit),
-                    y: .value("PayPal", point.paypalAmount.doubleValue),
-                    width: config.barWidth
-                )
-                .foregroundStyle(AppTheme.Colors.paypal.gradient)
-            }
-
-            if let selectedPoint {
-                RuleMark(x: .value("Selected", selectedPoint.date, unit: config.chartUnit))
-                    .foregroundStyle(AppTheme.Colors.textTertiary.opacity(0.3))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                    .annotation(position: .top, spacing: 4) {
-                        tooltipView(for: selectedPoint)
-                    }
-            }
-        }
-        .chartXAxis { xAxisMarks }
-        .chartYAxis { yAxisMarks }
-        .chartYScale(domain: 0...maxY)
-        .chartXScale(domain: config.xDomain)
-        .chartPlotStyle { plot in
-            plot.padding(.leading, 4).padding(.trailing, 4)
-        }
-        .chartOverlay { proxy in
-            GeometryReader { geo in
-                Rectangle()
-                    .fill(.clear)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                let origin = geo[proxy.plotAreaFrame].origin
-                                let xPos = value.location.x - origin.x
-                                if let date: Date = proxy.value(atX: xPos) {
-                                    selectedPoint = dataPoints.min(by: {
-                                        abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
-                                    })
-                                }
-                            }
-                            .onEnded { _ in
-                                selectedPoint = nil
-                            }
-                    )
-            }
-        }
-        .frame(height: 200)
+    private var majorTickIndices: [Int] {
+        period.majorTickIndices(pointCount: indexedPoints.count)
     }
 
-    @AxisContentBuilder
-    private var xAxisMarks: some AxisContent {
-        if period == .threeMonths || period == .sixMonths || period == .oneYear {
-            AxisMarks(values: config.monthlyAxisDates) { _ in
-                AxisValueLabel(format: config.xAxisDateFormat)
-                    .font(AppTheme.Typography.micro)
-                    .foregroundStyle(AppTheme.Colors.textTertiary)
-            }
-        } else if period == .weekly {
-            AxisMarks(values: .stride(by: .day)) { _ in
-                AxisValueLabel(format: config.xAxisDateFormat)
-                    .font(AppTheme.Typography.micro)
-                    .foregroundStyle(AppTheme.Colors.textTertiary)
-            }
-        } else if period == .monthly {
-            AxisMarks(values: config.monthlyDayAxisDates) { _ in
-                AxisValueLabel(format: config.xAxisDateFormat)
-                    .font(AppTheme.Typography.micro)
-                    .foregroundStyle(AppTheme.Colors.textTertiary)
-            }
-        } else {
-            AxisMarks(values: .automatic(desiredCount: 6)) { _ in
-                AxisValueLabel(format: config.xAxisDateFormat)
-                    .font(AppTheme.Typography.micro)
-                    .foregroundStyle(AppTheme.Colors.textTertiary)
-            }
-        }
+    private var minorTickIndices: [Int] {
+        period.minorTickIndices(pointCount: indexedPoints.count)
     }
 
-    @AxisContentBuilder
-    private var yAxisMarks: some AxisContent {
-        AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
-            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
-                .foregroundStyle(AppTheme.Colors.separator.opacity(0.5))
-            AxisValueLabel {
-                if let d = value.as(Double.self) {
-                    Text(Decimal(d).eurCompact)
-                        .font(AppTheme.Typography.micro)
-                        .foregroundStyle(AppTheme.Colors.textTertiary)
-                }
+    private var barWidth: MarkDimension {
+        .ratio(period.chartBarRatioGroupedSeries)
+    }
+
+    private var xDomain: ClosedRange<Double> {
+        guard !indexedPoints.isEmpty else { return -0.5...0.5 }
+        return -0.5...(Double(indexedPoints.count) - 0.5)
+    }
+
+    private var selectedPoint: IndexedPoint? {
+        guard let selectedIndex, indexedPoints.indices.contains(selectedIndex) else { return nil }
+        return indexedPoints[selectedIndex]
+    }
+
+    private var dataSignature: String {
+        indexedPoints.map {
+            let total = NSDecimalNumber(decimal: $0.point.total).stringValue
+            return "\($0.id)-\(total)"
+        }
+        .joined(separator: "|")
+    }
+
+    private var indexedPoints: [IndexedPoint] {
+        dataPoints
+            .sorted { $0.date < $1.date }
+            .enumerated()
+            .map { index, point in
+                IndexedPoint(index: index, point: point)
             }
+    }
+
+    private func restartBarAnimation() {
+        barRevealProgress = 0.15
+        withAnimation(.easeOut(duration: 0.38)) {
+            barRevealProgress = 1
         }
     }
 
@@ -164,9 +217,19 @@ struct IncomeChartView: View {
     }
 }
 
+private struct IndexedPoint: Identifiable {
+    let index: Int
+    let point: ChartDataPoint
+
+    var id: String { point.id }
+}
+
 struct IncomeChartView_Previews: PreviewProvider {
     static var previews: some View {
-        IncomeChartView(dataPoints: [], period: .monthly)
-            .padding()
+        IncomeChartView(
+            dataPoints: [],
+            period: .monthly
+        )
+        .padding()
     }
 }

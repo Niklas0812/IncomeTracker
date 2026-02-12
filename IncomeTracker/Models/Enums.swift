@@ -130,6 +130,110 @@ enum TimePeriod: String, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Chart Display Strategy
+
+extension TimePeriod {
+    var chartBucketComponent: Calendar.Component {
+        switch self {
+        case .daily: return .hour
+        case .weekly, .monthly: return .day
+        case .threeMonths, .sixMonths, .oneYear: return .month
+        }
+    }
+
+    var chartBarRatioSingleSeries: CGFloat {
+        switch self {
+        case .daily: return 0.42
+        case .weekly: return 0.6
+        case .monthly: return 0.72
+        case .threeMonths: return 0.64
+        case .sixMonths: return 0.68
+        case .oneYear: return 0.78
+        }
+    }
+
+    var chartBarRatioGroupedSeries: CGFloat {
+        switch self {
+        case .daily: return 0.48
+        case .weekly: return 0.62
+        case .monthly: return 0.76
+        case .threeMonths: return 0.66
+        case .sixMonths: return 0.68
+        case .oneYear: return 0.76
+        }
+    }
+
+    func majorTickIndices(pointCount: Int) -> [Int] {
+        guard pointCount > 0 else { return [] }
+
+        switch self {
+        case .daily:
+            return evenlySpacedTickIndices(pointCount: pointCount, target: 6)
+        case .weekly:
+            return Array(0..<pointCount)
+        case .monthly:
+            return evenlySpacedTickIndices(pointCount: pointCount, target: 6)
+        case .threeMonths, .sixMonths:
+            return Array(0..<pointCount)
+        case .oneYear:
+            if pointCount <= 6 {
+                return Array(0..<pointCount)
+            }
+            var values = Array(stride(from: 0, to: pointCount, by: 2))
+            if let last = values.last, last != pointCount - 1 {
+                values[values.count - 1] = pointCount - 1
+            }
+            return values
+        }
+    }
+
+    func minorTickIndices(pointCount: Int) -> [Int] {
+        guard pointCount > 0 else { return [] }
+        if self == .oneYear { return Array(0..<pointCount) }
+        return []
+    }
+
+    func chartAxisLabel(for date: Date) -> String {
+        switch self {
+        case .daily:
+            return date.formatted(.dateTime.hour())
+        case .weekly:
+            return date.formatted(.dateTime.weekday(.abbreviated))
+        case .monthly:
+            return date.formatted(.dateTime.day().month(.abbreviated))
+        case .threeMonths, .sixMonths:
+            return date.formatted(.dateTime.month(.abbreviated))
+        case .oneYear:
+            return date.formatted(.dateTime.month(.abbreviated).year(.twoDigits))
+        }
+    }
+
+    private func evenlySpacedTickIndices(pointCount: Int, target: Int) -> [Int] {
+        guard pointCount > 0 else { return [] }
+        let safeTarget = max(1, target)
+        if pointCount <= safeTarget { return Array(0..<pointCount) }
+        if safeTarget == 1 { return [0, pointCount - 1] }
+
+        let denominator = Double(safeTarget - 1)
+        var values: [Int] = []
+        var seen: Set<Int> = []
+
+        for step in 0..<safeTarget {
+            let raw = (Double(step) * Double(pointCount - 1)) / denominator
+            let index = Int(round(raw))
+            if seen.insert(index).inserted {
+                values.append(index)
+            }
+        }
+
+        if values.last != pointCount - 1 {
+            values.append(pointCount - 1)
+        }
+
+        return values
+    }
+}
+
 // MARK: - Sort Option for Workers
 
 enum WorkerSortOption: String, CaseIterable, Identifiable {

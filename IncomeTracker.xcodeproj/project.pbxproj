@@ -37,7 +37,6 @@
 		A10001010000000000000029 /* Date+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000029 /* Date+Helpers.swift */; };
 		A10001010000000000000030 /* Decimal+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000030 /* Decimal+Formatting.swift */; };
 		A10001010000000000000031 /* Color+Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000031 /* Color+Brand.swift */; };
-		A10001010000000000000099 /* ChartConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000099 /* ChartConfiguration.swift */; };
 		A10001010000000000000032 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000032 /* Assets.xcassets */; };
 		A10001010000000000000033 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000035 /* APIClient.swift */; };
 		A10001010000000000000034 /* APIEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001010000000000000036 /* APIEndpoints.swift */; };
@@ -90,7 +89,6 @@
 		A20001010000000000000029 /* Date+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Helpers.swift"; sourceTree = "<group>"; };
 		A20001010000000000000030 /* Decimal+Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Decimal+Formatting.swift"; sourceTree = "<group>"; };
 		A20001010000000000000031 /* Color+Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Brand.swift"; sourceTree = "<group>"; };
-		A20001010000000000000099 /* ChartConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChartConfiguration.swift"; sourceTree = "<group>"; };
 		A20001010000000000000032 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20001010000000000000033 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20001010000000000000034 /* IncomeTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IncomeTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -305,7 +303,6 @@
 				A20001010000000000000029 /* Date+Helpers.swift */,
 				A20001010000000000000030 /* Decimal+Formatting.swift */,
 				A20001010000000000000031 /* Color+Brand.swift */,
-				A20001010000000000000099 /* ChartConfiguration.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -411,7 +408,6 @@
 				A10001010000000000000029 /* Date+Helpers.swift in Sources */,
 				A10001010000000000000030 /* Decimal+Formatting.swift in Sources */,
 				A10001010000000000000031 /* Color+Brand.swift in Sources */,
-				A10001010000000000000099 /* ChartConfiguration.swift in Sources */,
 				A10001010000000000000033 /* APIClient.swift in Sources */,
 				A10001010000000000000034 /* APIEndpoints.swift in Sources */,
 				A10001010000000000000035 /* APIModels.swift in Sources */,
