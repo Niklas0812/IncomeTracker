@@ -63,11 +63,7 @@ struct IncomeChartView: View {
                         .foregroundStyle(AppTheme.Colors.separator.opacity(0.5))
                     AxisValueLabel {
                         if let index = indexFromAxisValue(value), indexedPoints.indices.contains(index) {
-                            Text(period.chartAxisLabel(for: indexedPoints[index].point.date))
-                                .font(AppTheme.Typography.micro)
-                                .foregroundStyle(AppTheme.Colors.textTertiary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.85)
+                            axisLabel(for: index)
                         }
                     }
                     if period == .oneYear {
@@ -147,10 +143,21 @@ struct IncomeChartView: View {
     }
 
     private var barWidth: MarkDimension {
-        let expectedPlotWidth: CGFloat = 300
-        let bucketCount = max(CGFloat(indexedPoints.count), 1)
-        let estimatedBucketWidth = expectedPlotWidth / bucketCount
-        let width = min(max(estimatedBucketWidth * 0.34, 2), 13)
+        let width: CGFloat
+        switch period {
+        case .daily:
+            width = 4
+        case .weekly:
+            width = 12
+        case .monthly:
+            width = 3
+        case .threeMonths:
+            width = 24
+        case .sixMonths:
+            width = 18
+        case .oneYear:
+            width = 10
+        }
         return .fixed(width)
     }
 
@@ -160,7 +167,16 @@ struct IncomeChartView: View {
     }
 
     private var xScalePadding: CGFloat {
-        period == .oneYear ? 16 : 12
+        switch period {
+        case .weekly:
+            return 24
+        case .threeMonths, .sixMonths:
+            return 18
+        case .oneYear:
+            return 16
+        default:
+            return 12
+        }
     }
 
     private var selectedPoint: IndexedPoint? {
@@ -200,6 +216,20 @@ struct IncomeChartView: View {
             return raw
         }
         return nil
+    }
+
+    private func axisLabel(for index: Int) -> some View {
+        Text(period.chartAxisLabel(for: indexedPoints[index].point.date))
+            .font(AppTheme.Typography.micro)
+            .foregroundStyle(AppTheme.Colors.textTertiary)
+            .fixedSize(horizontal: true, vertical: false)
+            .offset(x: axisLabelOffset(for: index))
+    }
+
+    private func axisLabelOffset(for index: Int) -> CGFloat {
+        if index == 0 { return 6 }
+        if index == indexedPoints.count - 1 { return -8 }
+        return 0
     }
 
     private func legendItem(color: Color, label: String) -> some View {
