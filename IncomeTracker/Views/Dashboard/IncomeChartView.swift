@@ -5,106 +5,113 @@ struct IncomeChartView: View {
     let dataPoints: [ChartDataPoint]
     let period: TimePeriod
 
-    @State private var selectedPoint: ChartDataPoint?
+    @State private var renderedPoints: [IndexedIncomePoint] = []
+    @State private var selectedIndex: Int?
+    @State private var chartOpacity: Double = 1
+    @State private var chartScaleY: CGFloat = 1
+    @State private var transitionToken: Int = 0
 
-    private var maxY: Double {
-        let maxVal = dataPoints.map { ($0.paysafeAmount + $0.paypalAmount).doubleValue }.max() ?? 0
-        return maxVal * 1.15
+    private var selectedPoint: IndexedIncomePoint? {
+        guard let selectedIndex, renderedPoints.indices.contains(selectedIndex) else { return nil }
+        return renderedPoints[selectedIndex]
     }
 
-    private var xDomain: ClosedRange<Date> {
-        guard let minDate = dataPoints.map(\.date).min(),
-              let maxDate = dataPoints.map(\.date).max() else {
-            return Date()...Date()
-        }
-        let calendar = Calendar.current
-        switch period {
-        case .threeMonths, .sixMonths, .oneYear:
-            let startOfFirstMonth = calendar.dateInterval(of: .month, for: minDate)?.start ?? minDate
-            let startOfLastMonth = calendar.dateInterval(of: .month, for: maxDate)?.start ?? maxDate
-            let endDomain = calendar.date(byAdding: .month, value: 1, to: startOfLastMonth) ?? maxDate
-            return startOfFirstMonth...endDomain
-        case .weekly:
-            let paddedMin = calendar.date(byAdding: .hour, value: -12, to: minDate) ?? minDate
-            let paddedMax = calendar.date(byAdding: .hour, value: 23, to: maxDate) ?? maxDate
-            return paddedMin...paddedMax
-        case .monthly:
-            let paddedMin = calendar.date(byAdding: .hour, value: -12, to: minDate) ?? minDate
-            let paddedMax = calendar.date(byAdding: .hour, value: 23, to: maxDate) ?? maxDate
-            return paddedMin...paddedMax
-        default:
-            let paddedMin = calendar.date(byAdding: chartUnit, value: -1, to: minDate) ?? minDate
-            let paddedMax = calendar.date(byAdding: chartUnit, value: 1, to: maxDate) ?? maxDate
-            return paddedMin...paddedMax
-        }
+    private var maxY: Double {
+        let maxValue = renderedPoints.map { ($0.paysafeAmount + $0.paypalAmount).doubleValue }.max() ?? 0
+        return max(maxValue * 1.15, 1)
+    }
+
+    private var xDomain: ClosedRange<Double> {
+        let upper = max(Double(renderedPoints.count) - 0.5, 0.5)
+        return -0.5...upper
+    }
+
+    private var majorTickValues: [Double] {
+        period.majorTickIndices(pointCount: renderedPoints.count).map(Double.init)
+    }
+
+    private var minorTickValues: [Double] {
+        period.minorTickIndices(pointCount: renderedPoints.count).map(Double.init)
+    }
+
+    private var barWidth: MarkDimension {
+        .ratio(period.chartBarRatioGroupedSeries)
+    }
+
+    private var dataRevision: [String] {
+        dataPoints.map { "\($0.id)-\($0.paysafeAmount)-\($0.paypalAmount)" }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            // Legend
             HStack(spacing: AppTheme.Spacing.md) {
                 legendItem(color: AppTheme.Colors.paysafe, label: "PaySafe")
                 legendItem(color: AppTheme.Colors.paypal, label: "PayPal")
             }
             .padding(.horizontal, AppTheme.Spacing.md)
 
-            // Chart
             Chart {
-                ForEach(dataPoints) { point in
+                ForEach(renderedPoints) { point in
                     BarMark(
-                        x: .value("Date", point.date, unit: chartUnit),
+                        x: .value("Bucket", point.x),
                         y: .value("Amount", point.paysafeAmount.doubleValue),
                         width: barWidth
                     )
+                    .position(by: .value("Source", "PaySafe"))
                     .foregroundStyle(AppTheme.Colors.paysafe.gradient)
                     .cornerRadius(4)
 
                     BarMark(
-                        x: .value("Date", point.date, unit: chartUnit),
+                        x: .value("Bucket", point.x),
                         y: .value("Amount", point.paypalAmount.doubleValue),
                         width: barWidth
                     )
+                    .position(by: .value("Source", "PayPal"))
                     .foregroundStyle(AppTheme.Colors.paypal.gradient)
                     .cornerRadius(4)
                 }
 
-                if let selectedPoint = selectedPoint {
-                    RuleMark(x: .value("Selected", selectedPoint.date, unit: chartUnit))
-                        .foregroundStyle(AppTheme.Colors.textTertiary.opacity(0.3))
+                if let selectedPoint {
+                    RuleMark(x: .value("Selected", selectedPoint.x))
+                        .foregroundStyle(AppTheme.Colors.textTertiary.opacity(0.4))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                        .annotation(position: .top, spacing: 4) {
+                        .annotation(position: .top, spacing: 6) {
                             tooltipView(for: selectedPoint)
                         }
                 }
             }
             .chartXAxis {
-                if period == .threeMonths || period == .sixMonths || period == .oneYear {
-                    AxisMarks(values: monthlyAxisDates) { _ in
-                        AxisValueLabel(format: xAxisDateFormat)
-                            .font(AppTheme.Typography.micro)
-                            .foregroundStyle(AppTheme.Colors.textTertiary)
+                if period == .oneYear && !minorTickValues.isEmpty {
+                    AxisMarks(values: minorTickValues) { _ in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.4))
+                            .foregroundStyle(AppTheme.Colors.separator.opacity(0.2))
+                        AxisTick()
+                            .foregroundStyle(AppTheme.Colors.separator.opacity(0.35))
                     }
-                } else if period == .weekly {
-                    AxisMarks(values: .stride(by: .day)) { _ in
-                        AxisValueLabel(format: xAxisDateFormat)
-                            .font(AppTheme.Typography.micro)
-                            .foregroundStyle(AppTheme.Colors.textTertiary)
-                    }
-                } else {
-                    AxisMarks(values: .automatic(desiredCount: xAxisLabelCount)) { _ in
-                        AxisValueLabel(format: xAxisDateFormat)
-                            .font(AppTheme.Typography.micro)
-                            .foregroundStyle(AppTheme.Colors.textTertiary)
+                }
+
+                AxisMarks(values: majorTickValues) { value in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.6))
+                        .foregroundStyle(AppTheme.Colors.separator.opacity(period == .oneYear ? 0.35 : 0.25))
+                    AxisTick()
+                        .foregroundStyle(AppTheme.Colors.separator.opacity(0.4))
+                    AxisValueLabel {
+                        if let label = axisLabel(for: value) {
+                            Text(label)
+                                .font(AppTheme.Typography.micro)
+                                .foregroundStyle(AppTheme.Colors.textTertiary)
+                                .lineLimit(1)
+                        }
                     }
                 }
             }
             .chartYAxis {
                 AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
-                        .foregroundStyle(AppTheme.Colors.separator.opacity(0.5))
+                        .foregroundStyle(AppTheme.Colors.separator.opacity(0.45))
                     AxisValueLabel {
-                        if let doubleVal = value.as(Double.self) {
-                            Text(Decimal(doubleVal).eurCompact)
+                        if let d = value.as(Double.self) {
+                            Text(Decimal(d).eurCompact)
                                 .font(AppTheme.Typography.micro)
                                 .foregroundStyle(AppTheme.Colors.textTertiary)
                         }
@@ -119,98 +126,109 @@ struct IncomeChartView: View {
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
-                                    let xPosition = value.location.x
-                                    if let date: Date = proxy.value(atX: xPosition) {
-                                        // Find closest data point by date
-                                        selectedPoint = dataPoints.min(by: {
-                                            abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
-                                        })
+                                    guard !renderedPoints.isEmpty else {
+                                        selectedIndex = nil
+                                        return
                                     }
+                                    let plotFrame = geo[proxy.plotAreaFrame]
+                                    let xPosition = value.location.x - plotFrame.origin.x
+                                    guard xPosition >= 0, xPosition <= plotFrame.width else {
+                                        selectedIndex = nil
+                                        return
+                                    }
+                                    guard let rawX: Double = proxy.value(atX: xPosition) else {
+                                        selectedIndex = nil
+                                        return
+                                    }
+                                    let clamped = min(max(Int(round(rawX)), 0), renderedPoints.count - 1)
+                                    selectedIndex = clamped
                                 }
                                 .onEnded { _ in
-                                    selectedPoint = nil
+                                    selectedIndex = nil
                                 }
                         )
                 }
             }
-            .chartYScale(domain: 0...max(maxY, 1))
+            .chartYScale(domain: 0...maxY)
             .chartXScale(domain: xDomain)
             .chartPlotStyle { plot in
-                plot.padding(.leading, 8).padding(.trailing, 28)
+                plot
+                    .padding(.leading, AppTheme.Spacing.xs)
+                    .padding(.trailing, AppTheme.Spacing.xs)
             }
             .frame(height: 200)
-            .id(period)
+            .opacity(chartOpacity)
+            .scaleEffect(x: 1, y: chartScaleY, anchor: .bottom)
         }
         .padding(AppTheme.Spacing.md)
         .chartCardStyle()
-        .transaction { t in t.animation = nil }
+        .onAppear {
+            if renderedPoints.isEmpty {
+                renderedPoints = indexData(dataPoints)
+            } else {
+                updateRenderedData(animated: false)
+            }
+        }
         .onChange(of: period) { _ in
-            selectedPoint = nil
+            selectedIndex = nil
+            updateRenderedData(animated: true)
+        }
+        .onChange(of: dataRevision) { _ in
+            updateRenderedData(animated: true)
         }
     }
 
-    private var chartUnit: Calendar.Component {
-        switch period {
-        case .daily: return .hour
-        case .weekly: return .day
-        case .monthly: return .day
-        case .threeMonths: return .month
-        case .sixMonths: return .month
-        case .oneYear: return .month
-        }
+    private func indexData(_ points: [ChartDataPoint]) -> [IndexedIncomePoint] {
+        points
+            .sorted { $0.date < $1.date }
+            .enumerated()
+            .map { idx, point in
+                IndexedIncomePoint(
+                    index: idx,
+                    date: point.date,
+                    label: point.label,
+                    paysafeAmount: point.paysafeAmount,
+                    paypalAmount: point.paypalAmount
+                )
+            }
     }
 
-    private var xAxisLabelCount: Int {
-        switch period {
-        case .daily: return 6
-        case .weekly: return 7
-        case .monthly: return 6
-        case .threeMonths: return 3
-        case .sixMonths: return 6
-        case .oneYear: return 12
-        }
-    }
+    private func updateRenderedData(animated: Bool) {
+        let next = indexData(dataPoints)
+        guard next != renderedPoints else { return }
 
-    private var barWidth: MarkDimension {
-        switch period {
-        case .threeMonths: return .ratio(0.5)
-        case .sixMonths: return .ratio(0.6)
-        case .oneYear: return .ratio(0.7)
-        default: return .automatic
-        }
-    }
+        selectedIndex = nil
 
-    private var monthlyAxisDates: [Date] {
-        let calendar = Calendar.current
-        var dates: [Date] = []
-        for point in dataPoints {
-            if let interval = calendar.dateInterval(of: .month, for: point.date) {
-                let midpoint = interval.start.addingTimeInterval(interval.duration / 2)
-                dates.append(midpoint)
+        guard animated, !renderedPoints.isEmpty else {
+            renderedPoints = next
+            chartOpacity = 1
+            chartScaleY = 1
+            return
+        }
+
+        transitionToken += 1
+        let token = transitionToken
+
+        withAnimation(.easeOut(duration: 0.12)) {
+            chartOpacity = 0.2
+            chartScaleY = 0.96
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+            guard token == transitionToken else { return }
+            renderedPoints = next
+            withAnimation(.easeInOut(duration: 0.28)) {
+                chartOpacity = 1
+                chartScaleY = 1
             }
         }
-        // For 1Y (>6 months), show every other label to prevent crowding
-        if dates.count > 6 {
-            return dates.enumerated().compactMap { index, date in
-                (dates.count - 1 - index).isMultiple(of: 2) ? date : nil
-            }
-        }
-        return dates
     }
 
-    private var xAxisDateFormat: Date.FormatStyle {
-        switch period {
-        case .daily:
-            return .dateTime.hour()
-        case .weekly:
-            return .dateTime.weekday(.abbreviated)
-        case .monthly:
-            return .dateTime.day().month(.abbreviated)
-        case .threeMonths, .sixMonths:
-            return .dateTime.month(.abbreviated)
-        case .oneYear:
-            return .dateTime.month(.abbreviated)
-        }
+    private func axisLabel(for value: AxisValue) -> String? {
+        guard let x = value.as(Double.self) else { return nil }
+        let index = Int(round(x))
+        guard renderedPoints.indices.contains(index) else { return nil }
+        return period.chartAxisLabel(for: renderedPoints[index].date)
     }
 
     private func legendItem(color: Color, label: String) -> some View {
@@ -224,7 +242,7 @@ struct IncomeChartView: View {
         }
     }
 
-    private func tooltipView(for point: ChartDataPoint) -> some View {
+    private func tooltipView(for point: IndexedIncomePoint) -> some View {
         VStack(spacing: 2) {
             Text(point.total.eurFormatted)
                 .font(AppTheme.Typography.captionBold)
@@ -239,6 +257,18 @@ struct IncomeChartView: View {
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.small))
         .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
     }
+}
+
+private struct IndexedIncomePoint: Identifiable, Equatable {
+    let index: Int
+    let date: Date
+    let label: String
+    let paysafeAmount: Decimal
+    let paypalAmount: Decimal
+
+    var id: Int { index }
+    var x: Double { Double(index) }
+    var total: Decimal { paysafeAmount + paypalAmount }
 }
 
 struct IncomeChartView_Previews: PreviewProvider {

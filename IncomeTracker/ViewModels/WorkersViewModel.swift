@@ -65,19 +65,17 @@ final class WorkersViewModel: ObservableObject {
         let response: WorkerDetailResponse = try await client.request(
             .workerDetail(userId: worker.id, period: period.rawValue)
         )
-        withAnimation(.easeInOut(duration: 0.3)) {
-            let txns = response.recentTransactions.map { Transaction(from: $0) }
-            self.workerTransactions[worker.id] = txns
-            self.workerEarnings[worker.id] = Decimal(response.worker.totalEarnings)
+        let txns = response.recentTransactions.map { Transaction(from: $0) }
+        self.workerTransactions[worker.id] = txns
+        self.workerEarnings[worker.id] = Decimal(response.worker.totalEarnings)
 
-            if let chartDTOs = response.chartData {
-                self.workerChartData[worker.id] = chartDTOs.map { dto in
-                    WorkerChartPoint(
-                        date: Date.fromAPIString(dto.date) ?? .now,
-                        label: dto.label,
-                        amount: Decimal(dto.amount)
-                    )
-                }
+        if let chartDTOs = response.chartData {
+            self.workerChartData[worker.id] = chartDTOs.map { dto in
+                WorkerChartPoint(
+                    date: Date.fromAPIString(dto.date) ?? .now,
+                    label: dto.label,
+                    amount: Decimal(dto.amount)
+                )
             }
         }
         return response
