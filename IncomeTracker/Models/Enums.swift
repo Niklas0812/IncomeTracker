@@ -176,14 +176,7 @@ extension TimePeriod {
         case .threeMonths, .sixMonths:
             return Array(0..<pointCount)
         case .oneYear:
-            if pointCount <= 6 {
-                return Array(0..<pointCount)
-            }
-            var values = Array(stride(from: 0, to: pointCount, by: 2))
-            if let last = values.last, last != pointCount - 1 {
-                values[values.count - 1] = pointCount - 1
-            }
-            return values
+            return evenlySpacedTickIndices(pointCount: pointCount, target: min(6, pointCount))
         }
     }
 

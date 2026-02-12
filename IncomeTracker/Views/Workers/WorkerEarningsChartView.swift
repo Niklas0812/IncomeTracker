@@ -16,7 +16,7 @@ struct WorkerEarningsChartView: View {
     var body: some View {
         Chart(indexedPoints) { item in
             BarMark(
-                x: .value("Bucket", item.index),
+                x: .value("Bucket", item.xValue),
                 y: .value("Amount", item.point.amount.doubleValue * barRevealProgress),
                 width: barWidth
             )
@@ -24,7 +24,7 @@ struct WorkerEarningsChartView: View {
             .cornerRadius(4)
 
             if let selected = selectedPoint {
-                RuleMark(x: .value("Selected", selected.index))
+                RuleMark(x: .value("Selected", selected.xValue))
                     .foregroundStyle(AppTheme.Colors.textTertiary.opacity(0.3))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                     .annotation(position: .top, spacing: 4) {
@@ -46,30 +46,21 @@ struct WorkerEarningsChartView: View {
         }
         .chartXAxis {
             if !minorTickIndices.isEmpty {
-                AxisMarks(values: minorTickIndices) { _ in
+                AxisMarks(values: minorTickValues) { _ in
                     AxisTick(length: 3)
                         .foregroundStyle(AppTheme.Colors.separator.opacity(0.35))
                 }
             }
-            AxisMarks(values: majorTickIndices) { value in
+            AxisMarks(values: majorTickValues) { value in
                 AxisTick(length: 5)
                     .foregroundStyle(AppTheme.Colors.separator.opacity(0.5))
                 AxisValueLabel {
-                    if let index = value.as(Int.self), indexedPoints.indices.contains(index) {
+                    if let index = indexFromAxisValue(value), indexedPoints.indices.contains(index) {
                         Text(period.chartAxisLabel(for: indexedPoints[index].point.date))
                             .font(AppTheme.Typography.micro)
                             .foregroundStyle(AppTheme.Colors.textTertiary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.85)
-                    } else if let raw = value.as(Double.self) {
-                        let rounded = Int(raw.rounded())
-                        if indexedPoints.indices.contains(rounded) {
-                            Text(period.chartAxisLabel(for: indexedPoints[rounded].point.date))
-                                .font(AppTheme.Typography.micro)
-                                .foregroundStyle(AppTheme.Colors.textTertiary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.85)
-                        }
                     }
                 }
                 if period == .oneYear {
@@ -101,13 +92,10 @@ struct WorkerEarningsChartView: View {
                                 let originX = geo[proxy.plotAreaFrame].origin.x
                                 let relativeX = value.location.x - originX
                                 guard relativeX >= 0, relativeX <= proxy.plotAreaSize.width else { return }
-                                if let bucket: Int = proxy.value(atX: relativeX), indexedPoints.indices.contains(bucket) {
-                                    selectedIndex = bucket
-                                } else if let raw: Double = proxy.value(atX: relativeX) {
+                                if let raw: Double = proxy.value(atX: relativeX) {
                                     let bucket = Int(raw.rounded())
-                                    if indexedPoints.indices.contains(bucket) {
-                                        selectedIndex = bucket
-                                    }
+                                    guard indexedPoints.indices.contains(bucket) else { return }
+                                    selectedIndex = bucket
                                 }
                             }
                             .onEnded { _ in
@@ -118,7 +106,7 @@ struct WorkerEarningsChartView: View {
         }
         .chartYScale(domain: 0...maxY)
         .chartXScale(domain: xDomain)
-        .chartXScale(range: .plotDimension(startPadding: 10, endPadding: 10))
+        .chartXScale(range: .plotDimension(startPadding: xScalePadding, endPadding: xScalePadding))
         .frame(height: 180)
         .padding(AppTheme.Spacing.md)
         .chartCardStyle()
@@ -130,7 +118,6 @@ struct WorkerEarningsChartView: View {
         }
         .onChange(of: period) { _ in
             selectedIndex = nil
-            restartBarAnimation()
         }
     }
 
@@ -142,13 +129,29 @@ struct WorkerEarningsChartView: View {
         period.minorTickIndices(pointCount: indexedPoints.count)
     }
 
+    private var majorTickValues: [Double] {
+        majorTickIndices.map(Double.init)
+    }
+
+    private var minorTickValues: [Double] {
+        minorTickIndices.map(Double.init)
+    }
+
     private var barWidth: MarkDimension {
-        .ratio(period.chartBarRatioSingleSeries)
+        let expectedPlotWidth: CGFloat = 300
+        let bucketCount = max(CGFloat(indexedPoints.count), 1)
+        let estimatedBucketWidth = expectedPlotWidth / bucketCount
+        let width = min(max(estimatedBucketWidth * 0.62, 3), 22)
+        return .fixed(width)
     }
 
     private var xDomain: ClosedRange<Double> {
         guard !indexedPoints.isEmpty else { return -0.5...0.5 }
         return -0.5...(Double(indexedPoints.count) - 0.5)
+    }
+
+    private var xScalePadding: CGFloat {
+        period == .oneYear ? 16 : 12
     }
 
     private var selectedPoint: IndexedWorkerPoint? {
@@ -179,6 +182,16 @@ struct WorkerEarningsChartView: View {
             barRevealProgress = 1
         }
     }
+
+    private func indexFromAxisValue(_ value: AxisValue) -> Int? {
+        if let raw = value.as(Double.self) {
+            return Int(raw.rounded())
+        }
+        if let raw = value.as(Int.self) {
+            return raw
+        }
+        return nil
+    }
 }
 
 private struct IndexedWorkerPoint: Identifiable {
@@ -186,4 +199,5 @@ private struct IndexedWorkerPoint: Identifiable {
     let point: WorkerChartPoint
 
     var id: String { point.id }
+    var xValue: Double { Double(index) }
 }

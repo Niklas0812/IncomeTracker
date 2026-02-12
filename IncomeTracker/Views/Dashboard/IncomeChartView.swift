@@ -24,7 +24,7 @@ struct IncomeChartView: View {
             Chart {
                 ForEach(indexedPoints) { item in
                     BarMark(
-                        x: .value("Bucket", item.index),
+                        x: .value("Bucket", item.xValue),
                         y: .value("Amount", item.point.paysafeAmount.doubleValue * barRevealProgress),
                         width: barWidth
                     )
@@ -33,7 +33,7 @@ struct IncomeChartView: View {
                     .cornerRadius(4)
 
                     BarMark(
-                        x: .value("Bucket", item.index),
+                        x: .value("Bucket", item.xValue),
                         y: .value("Amount", item.point.paypalAmount.doubleValue * barRevealProgress),
                         width: barWidth
                     )
@@ -43,7 +43,7 @@ struct IncomeChartView: View {
                 }
 
                 if let selectedPoint = selectedPoint {
-                    RuleMark(x: .value("Selected", selectedPoint.index))
+                    RuleMark(x: .value("Selected", selectedPoint.xValue))
                         .foregroundStyle(AppTheme.Colors.textTertiary.opacity(0.3))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                         .annotation(position: .top, spacing: 4) {
@@ -53,30 +53,21 @@ struct IncomeChartView: View {
             }
             .chartXAxis {
                 if !minorTickIndices.isEmpty {
-                    AxisMarks(values: minorTickIndices) { _ in
+                    AxisMarks(values: minorTickValues) { _ in
                         AxisTick(length: 3)
                             .foregroundStyle(AppTheme.Colors.separator.opacity(0.35))
                     }
                 }
-                AxisMarks(values: majorTickIndices) { value in
+                AxisMarks(values: majorTickValues) { value in
                     AxisTick(length: 5)
                         .foregroundStyle(AppTheme.Colors.separator.opacity(0.5))
                     AxisValueLabel {
-                        if let index = value.as(Int.self), indexedPoints.indices.contains(index) {
+                        if let index = indexFromAxisValue(value), indexedPoints.indices.contains(index) {
                             Text(period.chartAxisLabel(for: indexedPoints[index].point.date))
                                 .font(AppTheme.Typography.micro)
                                 .foregroundStyle(AppTheme.Colors.textTertiary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.85)
-                        } else if let raw = value.as(Double.self) {
-                            let rounded = Int(raw.rounded())
-                            if indexedPoints.indices.contains(rounded) {
-                                Text(period.chartAxisLabel(for: indexedPoints[rounded].point.date))
-                                    .font(AppTheme.Typography.micro)
-                                    .foregroundStyle(AppTheme.Colors.textTertiary)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.85)
-                            }
                         }
                     }
                     if period == .oneYear {
@@ -109,13 +100,10 @@ struct IncomeChartView: View {
                                     let originX = geo[proxy.plotAreaFrame].origin.x
                                     let relativeX = value.location.x - originX
                                     guard relativeX >= 0, relativeX <= proxy.plotAreaSize.width else { return }
-                                    if let bucket: Int = proxy.value(atX: relativeX), indexedPoints.indices.contains(bucket) {
-                                        selectedIndex = bucket
-                                    } else if let raw: Double = proxy.value(atX: relativeX) {
+                                    if let raw: Double = proxy.value(atX: relativeX) {
                                         let bucket = Int(raw.rounded())
-                                        if indexedPoints.indices.contains(bucket) {
-                                            selectedIndex = bucket
-                                        }
+                                        guard indexedPoints.indices.contains(bucket) else { return }
+                                        selectedIndex = bucket
                                     }
                                 }
                                 .onEnded { _ in
@@ -126,7 +114,7 @@ struct IncomeChartView: View {
             }
             .chartYScale(domain: 0...maxY)
             .chartXScale(domain: xDomain)
-            .chartXScale(range: .plotDimension(startPadding: 10, endPadding: 10))
+            .chartXScale(range: .plotDimension(startPadding: xScalePadding, endPadding: xScalePadding))
             .frame(height: 200)
         }
         .padding(AppTheme.Spacing.md)
@@ -139,7 +127,6 @@ struct IncomeChartView: View {
         }
         .onChange(of: period) { _ in
             selectedIndex = nil
-            restartBarAnimation()
         }
     }
 
@@ -151,13 +138,29 @@ struct IncomeChartView: View {
         period.minorTickIndices(pointCount: indexedPoints.count)
     }
 
+    private var majorTickValues: [Double] {
+        majorTickIndices.map(Double.init)
+    }
+
+    private var minorTickValues: [Double] {
+        minorTickIndices.map(Double.init)
+    }
+
     private var barWidth: MarkDimension {
-        .ratio(period.chartBarRatioGroupedSeries)
+        let expectedPlotWidth: CGFloat = 300
+        let bucketCount = max(CGFloat(indexedPoints.count), 1)
+        let estimatedBucketWidth = expectedPlotWidth / bucketCount
+        let width = min(max(estimatedBucketWidth * 0.34, 2), 13)
+        return .fixed(width)
     }
 
     private var xDomain: ClosedRange<Double> {
         guard !indexedPoints.isEmpty else { return -0.5...0.5 }
         return -0.5...(Double(indexedPoints.count) - 0.5)
+    }
+
+    private var xScalePadding: CGFloat {
+        period == .oneYear ? 16 : 12
     }
 
     private var selectedPoint: IndexedPoint? {
@@ -187,6 +190,16 @@ struct IncomeChartView: View {
         withAnimation(.easeOut(duration: 0.38)) {
             barRevealProgress = 1
         }
+    }
+
+    private func indexFromAxisValue(_ value: AxisValue) -> Int? {
+        if let raw = value.as(Double.self) {
+            return Int(raw.rounded())
+        }
+        if let raw = value.as(Int.self) {
+            return raw
+        }
+        return nil
     }
 
     private func legendItem(color: Color, label: String) -> some View {
@@ -222,6 +235,7 @@ private struct IndexedPoint: Identifiable {
     let point: ChartDataPoint
 
     var id: String { point.id }
+    var xValue: Double { Double(index) }
 }
 
 struct IncomeChartView_Previews: PreviewProvider {
