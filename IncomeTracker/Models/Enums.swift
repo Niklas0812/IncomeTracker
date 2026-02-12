@@ -168,16 +168,11 @@ extension TimePeriod {
         case .threeMonths, .sixMonths:
             return Array(0..<pointCount)
         case .oneYear:
-            if pointCount >= 10 {
-                return [0, 3, 6, 9].filter { $0 < pointCount }
-            }
-            return evenlySpacedTickIndices(pointCount: pointCount, target: min(4, pointCount))
+            return Array(0..<pointCount)
         }
     }
 
     func minorTickIndices(pointCount: Int) -> [Int] {
-        guard pointCount > 0 else { return [] }
-        if self == .oneYear { return Array(0..<pointCount) }
         return []
     }
 
@@ -189,8 +184,10 @@ extension TimePeriod {
             return date.formatted(.dateTime.weekday(.abbreviated))
         case .monthly:
             return date.formatted(.dateTime.day().month(.abbreviated))
-        case .threeMonths, .sixMonths, .oneYear:
+        case .threeMonths, .sixMonths:
             return date.formatted(.dateTime.month(.abbreviated))
+        case .oneYear:
+            return date.formatted(.dateTime.month(.narrow))
         }
     }
 

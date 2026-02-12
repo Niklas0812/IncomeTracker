@@ -7,7 +7,9 @@ struct PeriodSelector: View {
         HStack(spacing: AppTheme.Spacing.xxs) {
             ForEach(TimePeriod.allCases) { period in
                 Button {
-                    withAnimation(AppTheme.Animation.spring) {
+                    var transaction = Transaction()
+                    transaction.animation = nil
+                    withTransaction(transaction) {
                         selected = period
                     }
                 } label: {
@@ -25,6 +27,7 @@ struct PeriodSelector: View {
                         }
                 }
                 .buttonStyle(.plain)
+                .animation(AppTheme.Animation.spring, value: selected)
                 .accessibilityLabel(period.displayName)
                 .accessibilityAddTraits(selected == period ? .isSelected : [])
             }
