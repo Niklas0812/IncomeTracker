@@ -11,8 +11,8 @@ struct WorkerDetailView: View {
 
     private var periodEarnings: Decimal { viewModel.earnings(for: worker, in: selectedPeriod) }
     private var chartData: [WorkerChartPoint] { viewModel.chartData(for: worker, in: selectedPeriod) }
-    private var stats: WorkerStats { viewModel.stats(for: worker) }
-    private var transactions: [Transaction] { viewModel.transactions(for: worker) }
+    private var stats: WorkerStats { viewModel.stats(for: worker, in: selectedPeriod) }
+    private var transactions: [Transaction] { viewModel.transactions(for: worker, in: selectedPeriod) }
 
     var body: some View {
         ScrollView {

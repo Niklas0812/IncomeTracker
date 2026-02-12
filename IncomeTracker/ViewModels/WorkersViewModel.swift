@@ -9,9 +9,9 @@ final class WorkersViewModel: ObservableObject {
     @Published var error: String?
 
     @Published var workers: [Worker] = []
-    @Published var workerTransactions: [Int: [Transaction]] = [:]
-    @Published var workerEarnings: [Int: Decimal] = [:]
-    @Published var workerChartData: [Int: [WorkerChartPoint]] = [:]
+    @Published var workerTransactionsByPeriod: [String: [Transaction]] = [:]
+    @Published var workerEarningsByPeriod: [String: Decimal] = [:]
+    @Published var workerChartDataByPeriod: [String: [WorkerChartPoint]] = [:]
     @Published var availableWorkers: [AvailableWorkerDTO] = []
 
     private let client = APIClient.shared
@@ -65,18 +65,26 @@ final class WorkersViewModel: ObservableObject {
         let response: WorkerDetailResponse = try await client.request(
             .workerDetail(userId: worker.id, period: period.rawValue)
         )
+        if Task.isCancelled {
+            throw CancellationError()
+        }
+
+        let resolvedPeriod = TimePeriod(rawValue: response.period ?? period.rawValue) ?? period
+        let key = cacheKey(workerId: worker.id, period: resolvedPeriod)
         let txns = response.recentTransactions.map { Transaction(from: $0) }
-        self.workerTransactions[worker.id] = txns
-        self.workerEarnings[worker.id] = Decimal(response.worker.totalEarnings)
+        self.workerTransactionsByPeriod[key] = txns
+        self.workerEarningsByPeriod[key] = Decimal(response.worker.totalEarnings)
 
         if let chartDTOs = response.chartData {
-            self.workerChartData[worker.id] = chartDTOs.map { dto in
+            self.workerChartDataByPeriod[key] = chartDTOs.map { dto in
                 WorkerChartPoint(
                     date: Date.fromAPIString(dto.date) ?? .now,
                     label: dto.label,
                     amount: Decimal(dto.amount)
                 )
             }
+        } else {
+            self.workerChartDataByPeriod[key] = []
         }
         return response
     }
@@ -94,20 +102,20 @@ final class WorkersViewModel: ObservableObject {
         }
     }
 
-    func transactions(for worker: Worker) -> [Transaction] {
-        workerTransactions[worker.id] ?? []
+    func transactions(for worker: Worker, in period: TimePeriod) -> [Transaction] {
+        workerTransactionsByPeriod[cacheKey(workerId: worker.id, period: period)] ?? []
     }
 
     func earnings(for worker: Worker, in period: TimePeriod) -> Decimal {
-        workerEarnings[worker.id] ?? worker.totalEarnings
+        workerEarningsByPeriod[cacheKey(workerId: worker.id, period: period)] ?? worker.totalEarnings
     }
 
     func chartData(for worker: Worker, in period: TimePeriod) -> [WorkerChartPoint] {
-        workerChartData[worker.id] ?? []
+        workerChartDataByPeriod[cacheKey(workerId: worker.id, period: period)] ?? []
     }
 
-    func stats(for worker: Worker) -> WorkerStats {
-        let txns = transactions(for: worker).filter { $0.status == .completed }
+    func stats(for worker: Worker, in period: TimePeriod) -> WorkerStats {
+        let txns = transactions(for: worker, in: period).filter { $0.status == .completed }
         let amounts = txns.map { $0.amount }
         let total = amounts.reduce(0, +)
         let average = amounts.isEmpty ? Decimal.zero : total / Decimal(amounts.count)
@@ -120,6 +128,10 @@ final class WorkersViewModel: ObservableObject {
             totalCount: txns.count,
             lastTransactionDate: lastDate
         )
+    }
+
+    private func cacheKey(workerId: Int, period: TimePeriod) -> String {
+        "\(workerId)|\(period.rawValue)"
     }
 
     func createWorker(userId: Int, username: String, hourlyRate: Double, dailyHours: Double, completion: @escaping (Bool) -> Void) {

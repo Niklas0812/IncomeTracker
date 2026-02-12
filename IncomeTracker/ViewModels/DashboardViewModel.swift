@@ -3,7 +3,10 @@ import SwiftUI
 final class DashboardViewModel: ObservableObject {
 
     @Published var selectedPeriod: TimePeriod = .monthly {
-        didSet { fetchData() }
+        didSet {
+            loadCachedData(for: selectedPeriod)
+            fetchData()
+        }
     }
     @Published var isLoading = false
     @Published var error: String?
@@ -23,56 +26,39 @@ final class DashboardViewModel: ObservableObject {
 
     private let client = APIClient.shared
     private let cache = CacheService.shared
+    private var fetchTask: Task<Void, Never>?
 
     init() {
-        loadCachedData()
+        loadCachedData(for: selectedPeriod)
         fetchData()
     }
 
+    deinit {
+        fetchTask?.cancel()
+    }
+
     func fetchData() {
+        let requestedPeriod = selectedPeriod
         isLoading = true
         error = nil
 
-        Task {
+        fetchTask?.cancel()
+        fetchTask = Task { [weak self] in
+            guard let self else { return }
+
             do {
-                let response: DashboardResponse = try await client.request(
-                    .dashboard(period: selectedPeriod.rawValue)
+                let response: DashboardResponse = try await self.client.request(
+                    .dashboard(period: requestedPeriod.rawValue)
                 )
+                if Task.isCancelled { return }
                 await MainActor.run {
-                    self.totalIncome = Decimal(response.totalIncome)
-                    self.paysafeIncome = Decimal(response.paysafeIncome)
-                    self.paypalIncome = Decimal(response.paypalIncome)
-                    self.paysafeChange = response.paysafeChange
-                    self.paypalChange = response.paypalChange
-
-                    self.chartDataPoints = response.chartData.map { dto in
-                        ChartDataPoint(
-                            label: dto.label,
-                            date: Self.parseDate(dto.date),
-                            paysafeAmount: Decimal(dto.paysafe),
-                            paypalAmount: Decimal(dto.paypal)
-                        )
-                    }
-
-                    self.recentTransactions = response.recentTransactions.map { Transaction(from: $0) }
-
-                    self.topWorkers = response.topWorkers.map { tw in
-                        Worker(
-                            id: tw.workerId,
-                            name: tw.workerName,
-                            totalEarnings: Decimal(tw.total)
-                        )
-                    }
-
-                    self.paysafeSparkline = response.paysafeSparkline
-                    self.paypalSparkline = response.paypalSparkline
-                    self.paysafeStatus = response.paysafeStatus
-                    self.paypalStatus = response.paypalStatus
-                    self.isLoading = false
-                    self.cache.save(response, forKey: "dashboard_\(self.selectedPeriod.rawValue)")
+                    guard self.selectedPeriod == requestedPeriod else { return }
+                    self.apply(response: response, for: requestedPeriod, saveToCache: true)
                 }
             } catch {
+                if Task.isCancelled { return }
                 await MainActor.run {
+                    guard self.selectedPeriod == requestedPeriod else { return }
                     self.error = (error as? NetworkError)?.errorDescription ?? error.localizedDescription
                     self.isLoading = false
                 }
@@ -80,14 +66,21 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 
-    private func loadCachedData() {
-        guard let cached: DashboardResponse = cache.load(forKey: "dashboard_\(selectedPeriod.rawValue)") else { return }
-        totalIncome = Decimal(cached.totalIncome)
-        paysafeIncome = Decimal(cached.paysafeIncome)
-        paypalIncome = Decimal(cached.paypalIncome)
-        paysafeChange = cached.paysafeChange
-        paypalChange = cached.paypalChange
-        chartDataPoints = cached.chartData.map { dto in
+    private func loadCachedData(for period: TimePeriod) {
+        guard let cached: DashboardResponse = cache.load(forKey: cacheKey(for: period)) else {
+            chartDataPoints = []
+            return
+        }
+        apply(response: cached, for: period, saveToCache: false)
+    }
+
+    private func apply(response: DashboardResponse, for period: TimePeriod, saveToCache: Bool) {
+        totalIncome = Decimal(response.totalIncome)
+        paysafeIncome = Decimal(response.paysafeIncome)
+        paypalIncome = Decimal(response.paypalIncome)
+        paysafeChange = response.paysafeChange
+        paypalChange = response.paypalChange
+        chartDataPoints = response.chartData.map { dto in
             ChartDataPoint(
                 label: dto.label,
                 date: Self.parseDate(dto.date),
@@ -95,14 +88,22 @@ final class DashboardViewModel: ObservableObject {
                 paypalAmount: Decimal(dto.paypal)
             )
         }
-        recentTransactions = cached.recentTransactions.map { Transaction(from: $0) }
-        topWorkers = cached.topWorkers.map { tw in
+        recentTransactions = response.recentTransactions.map { Transaction(from: $0) }
+        topWorkers = response.topWorkers.map { tw in
             Worker(id: tw.workerId, name: tw.workerName, totalEarnings: Decimal(tw.total))
         }
-        paysafeSparkline = cached.paysafeSparkline
-        paypalSparkline = cached.paypalSparkline
-        paysafeStatus = cached.paysafeStatus
-        paypalStatus = cached.paypalStatus
+        paysafeSparkline = response.paysafeSparkline
+        paypalSparkline = response.paypalSparkline
+        paysafeStatus = response.paysafeStatus
+        paypalStatus = response.paypalStatus
+        isLoading = false
+        if saveToCache {
+            cache.save(response, forKey: cacheKey(for: period))
+        }
+    }
+
+    private func cacheKey(for period: TimePeriod) -> String {
+        "dashboard_\(period.rawValue)"
     }
 
     private static func parseDate(_ str: String) -> Date {

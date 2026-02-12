@@ -176,7 +176,24 @@ extension TimePeriod {
         case .threeMonths, .sixMonths:
             return Array(0..<pointCount)
         case .oneYear:
-            return evenlySpacedTickIndices(pointCount: pointCount, target: min(6, pointCount))
+            if pointCount <= 6 {
+                return Array(0..<pointCount)
+            }
+
+            let strideValue = max(2, Int(ceil(Double(pointCount) / 6.0)))
+            var indices = Array(stride(from: 0, to: pointCount, by: strideValue))
+            let lastIndex = pointCount - 1
+
+            if indices.last != lastIndex {
+                if let i = indices.indices.last,
+                   lastIndex - indices[i] <= max(1, strideValue / 2) {
+                    indices[i] = lastIndex
+                } else {
+                    indices.append(lastIndex)
+                }
+            }
+
+            return indices
         }
     }
 
@@ -194,10 +211,27 @@ extension TimePeriod {
             return date.formatted(.dateTime.weekday(.abbreviated))
         case .monthly:
             return date.formatted(.dateTime.day().month(.abbreviated))
-        case .threeMonths, .sixMonths:
+        case .threeMonths, .sixMonths, .oneYear:
             return date.formatted(.dateTime.month(.abbreviated))
-        case .oneYear:
-            return date.formatted(.dateTime.month(.abbreviated).year(.twoDigits))
+        }
+    }
+
+    static func inferredChartPeriod(pointCount: Int) -> TimePeriod? {
+        switch pointCount {
+        case 24...26:
+            return .daily
+        case 7:
+            return .weekly
+        case 27...35:
+            return .monthly
+        case 3:
+            return .threeMonths
+        case 6:
+            return .sixMonths
+        case 10...13:
+            return .oneYear
+        default:
+            return nil
         }
     }
 

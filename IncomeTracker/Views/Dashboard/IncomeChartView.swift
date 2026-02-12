@@ -28,7 +28,6 @@ struct IncomeChartView: View {
                         y: .value("Amount", item.point.paysafeAmount.doubleValue * barRevealProgress),
                         width: barWidth
                     )
-                    .position(by: .value("Source", "PaySafe"))
                     .foregroundStyle(AppTheme.Colors.paysafe.gradient)
                     .cornerRadius(4)
 
@@ -37,7 +36,6 @@ struct IncomeChartView: View {
                         y: .value("Amount", item.point.paypalAmount.doubleValue * barRevealProgress),
                         width: barWidth
                     )
-                    .position(by: .value("Source", "PayPal"))
                     .foregroundStyle(AppTheme.Colors.paypal.gradient)
                     .cornerRadius(4)
                 }
@@ -66,7 +64,7 @@ struct IncomeChartView: View {
                             axisLabel(for: index)
                         }
                     }
-                    if period == .oneYear {
+                    if layoutPeriod == .oneYear {
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [3, 3]))
                             .foregroundStyle(AppTheme.Colors.separator.opacity(0.25))
                     }
@@ -127,11 +125,11 @@ struct IncomeChartView: View {
     }
 
     private var majorTickIndices: [Int] {
-        period.majorTickIndices(pointCount: indexedPoints.count)
+        layoutPeriod.majorTickIndices(pointCount: indexedPoints.count)
     }
 
     private var minorTickIndices: [Int] {
-        period.minorTickIndices(pointCount: indexedPoints.count)
+        layoutPeriod.minorTickIndices(pointCount: indexedPoints.count)
     }
 
     private var majorTickValues: [Double] {
@@ -144,19 +142,19 @@ struct IncomeChartView: View {
 
     private var barWidth: MarkDimension {
         let width: CGFloat
-        switch period {
+        switch layoutPeriod {
         case .daily:
-            width = 4
+            width = 5
         case .weekly:
-            width = 12
+            width = 18
         case .monthly:
             width = 3
         case .threeMonths:
-            width = 24
+            width = 34
         case .sixMonths:
-            width = 18
+            width = 24
         case .oneYear:
-            width = 10
+            width = 14
         }
         return .fixed(width)
     }
@@ -167,13 +165,15 @@ struct IncomeChartView: View {
     }
 
     private var xScalePadding: CGFloat {
-        switch period {
+        switch layoutPeriod {
         case .weekly:
-            return 24
-        case .threeMonths, .sixMonths:
+            return 32
+        case .monthly:
             return 18
+        case .threeMonths, .sixMonths:
+            return 24
         case .oneYear:
-            return 16
+            return 30
         default:
             return 12
         }
@@ -201,6 +201,10 @@ struct IncomeChartView: View {
             }
     }
 
+    private var layoutPeriod: TimePeriod {
+        TimePeriod.inferredChartPeriod(pointCount: indexedPoints.count) ?? period
+    }
+
     private func restartBarAnimation() {
         barRevealProgress = 0.15
         withAnimation(.easeOut(duration: 0.38)) {
@@ -219,17 +223,12 @@ struct IncomeChartView: View {
     }
 
     private func axisLabel(for index: Int) -> some View {
-        Text(period.chartAxisLabel(for: indexedPoints[index].point.date))
+        Text(layoutPeriod.chartAxisLabel(for: indexedPoints[index].point.date))
             .font(AppTheme.Typography.micro)
             .foregroundStyle(AppTheme.Colors.textTertiary)
-            .fixedSize(horizontal: true, vertical: false)
-            .offset(x: axisLabelOffset(for: index))
-    }
-
-    private func axisLabelOffset(for index: Int) -> CGFloat {
-        if index == 0 { return 6 }
-        if index == indexedPoints.count - 1 { return -8 }
-        return 0
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .allowsTightening(true)
     }
 
     private func legendItem(color: Color, label: String) -> some View {
