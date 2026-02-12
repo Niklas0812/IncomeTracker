@@ -17,10 +17,7 @@ struct PeriodSelector: View {
 
     private func periodButton(for period: TimePeriod) -> some View {
         Button {
-            var t = Transaction(animation: nil)
-            withTransaction(t) {
-                selected = period
-            }
+            selected = period
         } label: {
             periodLabel(for: period)
         }
